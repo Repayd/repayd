@@ -5,7 +5,11 @@ import { scanFlow, type FlowResult } from "./src/flow.ts";
 import { RunError, RunManager } from "./src/run-manager.ts";
 
 const PORT = Number(process.env.REPAYD_DASH_PORT ?? 3000);
-const HOST = "127.0.0.1";
+const HOST = process.env.REPAYD_DASH_HOST ?? "127.0.0.1";
+const ALLOW_REMOTE = process.env.REPAYD_ALLOW_REMOTE === "1";
+const RUNNER_TOKEN = process.env.REPAYD_RUNNER_TOKEN;
+if (ALLOW_REMOTE && !RUNNER_TOKEN)
+  throw new Error("REPAYD_RUNNER_TOKEN is required when remote dashboard access is enabled.");
 const API = process.env.REPAYD_API_URL ?? "http://localhost:8787";
 const ROOT = resolve(import.meta.dir, "../..");
 const runs = new RunManager(ROOT);
@@ -32,10 +36,19 @@ const server = Bun.serve({
   idleTimeout: 255,
   async fetch(req): Promise<Response> {
     const url = new URL(req.url);
-    // This prototype controls funded testnet signing keys. Keep it loopback-only
-    // and reject cross-site mutation / DNS rebinding rather than exposing a faucet.
-    if (!["localhost", "127.0.0.1", "[::1]"].includes(url.hostname))
+    // Funded testnet mutations stay loopback-only by default. Remote mode is
+    // explicit and requires the server-only runner token below.
+    if (
+      !ALLOW_REMOTE &&
+      !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+    )
       return json(403, { error: "Use the local dashboard address." });
+    if (
+      ALLOW_REMOTE &&
+      url.pathname.startsWith("/api/") &&
+      req.headers.get("authorization") !== `Bearer ${RUNNER_TOKEN}`
+    )
+      return json(401, { error: "Remote dashboard API requires authorization." });
     try {
       if (req.method === "GET" && pages[url.pathname])
         return html(pages[url.pathname]!);
@@ -143,6 +156,11 @@ function json(status: number, body: unknown): Response {
   });
 }
 async function mutation(req: Request, url: URL): Promise<void> {
+  if (
+    ALLOW_REMOTE &&
+    req.headers.get("authorization") !== `Bearer ${RUNNER_TOKEN}`
+  )
+    throw new RunError(401, "Remote demo control requires a valid runner token.");
   const origin = req.headers.get("origin");
   if (
     (origin && origin !== url.origin) ||
