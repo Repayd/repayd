@@ -12,6 +12,12 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
+# Workspace packages are linked by the installer. Run it at boot so the runtime
+# always has the links, even when a build cache served a stale node_modules.
+if [ "${REPAYD_SKIP_INSTALL:-0}" != "1" ]; then
+  bun install --frozen-lockfile
+fi
+
 export REPAYD_API_URL="${REPAYD_API_URL:-http://127.0.0.1:8787}"
 export REPAYD_API_PORT="${REPAYD_API_PORT:-8787}"
 
