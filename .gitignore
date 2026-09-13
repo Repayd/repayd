@@ -17,6 +17,7 @@ packages/subgraph/generated/
 # js build
 dist/
 build/
+/packages/web/.next/
 coverage/
 coverage.json
 *.tsbuildinfo
