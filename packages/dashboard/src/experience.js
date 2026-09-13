@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     menu.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
   });
 
+  const primaryNav = query('.primary-nav');
+  if (primaryNav && !primaryNav.querySelector('[href="/capital"]')) {
+    primaryNav.insertAdjacentHTML('beforeend', '<a href="/capital">Capital</a><a href="/flow">Flow</a>');
+  }
+
   const revealNodes = [...document.querySelectorAll('.reveal')];
   revealNodes.forEach((node) => node.classList.add('is-pending'));
   if (!reduced && 'IntersectionObserver' in window) {

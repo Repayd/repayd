@@ -16,9 +16,9 @@ const pages: Record<string, string> = {
   "/owner": "app",
   "/demo": "demo",
   "/theater": "demo",
-  "/capital": "app",
+  "/capital": "capital",
   "/record": "record",
-  "/flow": "record",
+  "/flow": "flow",
 };
 const headers = {
   "cache-control": "no-store",
