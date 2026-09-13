@@ -12,3 +12,5 @@ healthcheckPath = "/api/health"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
+
+# The runner executes packages/demo; keep it watched so demo changes redeploy.
