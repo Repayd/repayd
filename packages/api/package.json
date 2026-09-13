@@ -5,7 +5,8 @@
   "type": "module",
   "main": "src/server.ts",
   "scripts": {
-    "start": "bun run src/server.ts",
+    "start": "bash ../../scripts/start-service.sh",
+    "start:api": "bun run src/server.ts",
     "dev": "bun --watch src/server.ts",
     "test": "vitest run",
     "lint": "tsc --noEmit"
