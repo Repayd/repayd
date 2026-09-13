@@ -24,7 +24,29 @@ A protected wallet that **holds** suspicious transactions for two minutes while 
 | **The Graph** — Best AI Tooling or AI Use Case (From Scratch) + Best Use of Composable or Standardized Graph Products | $5,000 + $5,000 | The **REPAYD Risk Subgraph**: 38 events, 12 entities, live provider data (Studio deploy), consumed by the AI **pricing engine** (streaks → premium decisions) and **risk-posture consumer** — plus composition with the **ERC-8004/Agent0 standardized schema** on `agentId` | [`docs/submission/compliance-matrix.md`](docs/submission/compliance-matrix.md#track-2a--the-graph-best-ai-tooling-or-ai-use-case-from-scratch-5000) |
 | **Hedera** — AI & Agentic Payments on Hedera | $6,000 (up to 3 × $2,000) | A **live x402-gated Risk Posture service on Hedera testnet** settled through Blocky402, consumed by the same guard agent in a **real paid request end-to-end** — with ERC-8004 cross-chain identity, HCS audit receipts, and scheduled-transaction settlement | [`docs/submission/compliance-matrix.md`](docs/submission/compliance-matrix.md#track-3--hedera-ai--agentic-payments-on-hedera-6000-up-to-3--2000) |
 
-Video scripts (all three recordable now — services live): [`docs/submission/video-scripts.md`](docs/submission/video-scripts.md).
+### What we use from each sponsor — integrated, live
+
+**🔵 Arc (Circle)**
+- **Arc testnet (chainId 5042002) as the settlement home** — all six contracts deployed there (`contracts/deployments/5042002.json`); the entire two-gasp demo ran on it as 14 real, verified transactions (`local/step4-final-report.md`). Arc's **USDC-native gas** means agents pay fees in the same stablecoin they spend.
+- **Circle-native USDC flows**: four autonomous payroll transfers, a frozen $150 injection (attack wallet balance $0 — it never settled), and a **$135 covered-claim payout executed in the same transaction as the verdict** (tx `0xed020f97…99f6` on Arcscan).
+- **Circle Developer-Controlled Wallets (Agent Stack)** — authenticated live reads via `api.circle.com/v1/w3s/*` (chain `ARC-TESTNET`): entity config, wallet sets, wallets, surfaced beside the on-chain GuardAccount balance at `GET /v1/circle/agent-wallet` (`packages/api/src/circle/agent-wallet.ts`); wallet create + one gated USDC spend implemented and endpoint-proven, gated on the entity secret.
+- **Circle Gateway / Nanopayments surface**: live unified-balance read across 12 domains (Arc = domain 26); per-block premium metering (`packages/pricing`) is the Nanopayment settlement primitive, with x402 already executed end-to-end on the Hedera rail.
+- **ERC-8004 on Arc's canonical registries** — identity `0x8004A818…BD9e`, validation `0x8004Cb1B…4272`, reputation `0x8004B663…8713`: agentId **894341** registered + wallet-bound, verdict mirrored as `validationRequest`→`validationResponse` (score 25 = COVERED, responseHash = verdict digest) and `giveFeedback` (−2500 @ 2dp, `covered`); suspicious holds post nothing — fail-closed by design.
+
+**🟣 The Graph**
+- **Subgraphs (deployed, live on Graph Studio, $0 free tier)** — Risk Subgraph `repayd-risk-arc` v0.1.3 (`packages/subgraph/`): 38 events across all six contracts → 12 entities (Agent, Policy, Transaction, Hold, Verdict, Claim, BlocklistEntry, PoolFlow + derived), fully synced to Arc head.
+- **A second, standardized-schema subgraph** — `repayd` v0.1.0 (`packages/subgraph/erc8004/`): indexes the **canonical ERC-8004 identity/validation/reputation registries** themselves (startBlocks 29241340/29241344/29241349) — the Agent0-aligned standard schema, so REPAYD's verdict data composes with every ERC-8004 agent, not just ours.
+- **Composition**: both endpoints share one query pattern joined on `agentId` — "what did the protocol decide" × "what does the standard corroborate."
+- **Live provider data, load-bearing for AI**: `packages/api/scripts/query-graph.ts` queries the deployed endpoint and computes a real Risk Posture (2.7× multiplier, $135/mo, labeled CLAIM_LOAD/SDK_DISCOUNT reasons, `POST_CLAIM_NO_STREAK` anomaly flag) — zero mocked or static data anywhere in the consumer chain; pricing engine + dashboards consume the same subgraph projections.
+
+**🟢 Hedera**
+- **x402 machine-payments service on Hedera testnet** — `packages/hedera`: the REPAYD Coverage & Risk API behind an x402 v2 `exact`/`hedera:testnet` paywall, verified + settled through the sponsor-named **Blocky402 facilitator** (`api.testnet.blocky402.com`, which also sponsors gas as fee-payer).
+- **Real paid requests, end-to-end**: two completed settlements on-chain (payer `0.0.10484477` −100,000 tinybars → service `0.0.10484593` +100,000; mirror-node `SUCCESS`): `0.0.7162784-1789189943-758655274` + `…1789190197-536086930` on HashScan; every take mints a fresh one for the camera.
+- **Pay-per-call metering**: per-endpoint price schedule (quote 0.001 ℏ / verdict 0.002 ℏ / résumé 0.0015 ℏ), prices carried in each 402 challenge, served+billed counts on `/healthz`.
+- **HCS for audit trails**: Consensus Service topic `0.0.10493275` holds x402 receipt memos (settlement tx, endpoint, price, agentId, identityVerified) — publicly verifiable on HashScan.
+- **Scheduled Transactions for recurring premiums**: schedule `0.0.10493353` created **and executed** — the §12 per-block premium model mapped onto Scheduled Transactions (`scripts/schedule-premium.ts`).
+- **ERC-8004 as cross-chain agent identity**: the payer signs as agentId 894341; the service validates it read-only against the canonical **Arc** registry — identity on Arc, money on Arc, memory on The Graph, payments on Hedera, one protocol.
+- **Discovery**: free `GET /v1/x402/services` JSON directory (endpoint, price, scheme, payTo) that agents query before paying, plus the ENSv2 résumé for human-facing lookup.
 
 Full-stack architecture diagram + narrative (mermaid flow, demo data path, live-proof appendix, address table): [`docs/submission/architecture.md`](docs/submission/architecture.md).
 Deploy procedure + cost for the Graph tracks: [`docs/submission/graph-deploy.md`](docs/submission/graph-deploy.md) (Studio free tier — $0).
