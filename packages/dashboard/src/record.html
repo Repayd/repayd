@@ -1,116 +1,355 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>REPAYD — Public Record</title>
-<style>
-  :root { --bg:#0b0e14; --panel:#12161f; --line:#1f2633; --ink:#e8edf5; --dim:#8b95a7; --ok:#34d399; --warn:#fbbf24; --bad:#f87171; --brand:#5b8cff; }
-  * { box-sizing:border-box; margin:0; }
-  body { background:var(--bg); color:var(--ink); font:14px/1.5 ui-monospace,monospace; padding:24px; }
-  header { display:flex; align-items:baseline; gap:12px; margin-bottom:20px; }
-  h1 { font-size:18px; letter-spacing:.5px; }
-  h1 b { color:var(--brand); }
-  nav a { color:var(--dim); text-decoration:none; margin-right:14px; }
-  nav a.on { color:var(--ink); border-bottom:1px solid var(--brand); }
-  .lookup { display:flex; gap:8px; margin-bottom:18px; }
-  .lookup input { flex:1; background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:10px 14px; font:inherit; }
-  .lookup button { background:var(--brand); border:0; color:#fff; border-radius:8px; padding:10px 20px; font:inherit; cursor:pointer; }
-  .record { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:20px; font-size:13.5px; }
-  .record .line { display:flex; gap:12px; padding:3px 0; }
-  .record .line b { width:110px; color:var(--dim); font-weight:400; flex-shrink:0; }
-  .claims .c { padding:3px 0 3px 122px; }
-  .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:10.5px; margin-right:6px; }
-  .pill.ok { background:rgba(52,211,153,.12); color:var(--ok); }
-  .pill.bad { background:rgba(248,113,113,.12); color:var(--bad); }
-  .pill.warn { background:rgba(251,191,36,.12); color:var(--warn); }
-  .note { color:var(--dim); font-size:11.5px; margin-top:14px; }
-  footer { margin-top:18px; color:var(--dim); font-size:11px; }
-</style>
-</head>
-<body>
-<header>
-  <h1><b>REPAYD</b> · Public Record</h1>
-  <nav>
-    <a href="/">Owner</a>
-    <a href="/capital">Capital</a>
-    <a class="on" href="/record">Record</a>
-  </nav>
-</header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Inspect saved-run identity, deployment addresses, policy evidence, local provenance, and verified outcome checks without invented reputation scores."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Record — REPAYD</title>
+    <script src="/assets/theme.js"></script>
+    <link rel="stylesheet" href="/assets/dashboard.css" />
+    <script type="module" src="/assets/surfaces.js"></script>
+  </head>
+  <body data-page="record">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/" aria-label="REPAYD home"
+          ><svg
+            class="brand-mark"
+            viewBox="0 0 32 32"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 26V6h10a7 7 0 0 1 0 14h-5m5 0 8 6M2 26h8"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="square"
+            /></svg
+          ><span
+            ><span class="brand-word">REPAYD</span
+            ><span class="brand-caption"
+              >Autonomy, with accountability.</span
+            ></span
+          ></a
+        >
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a href="/">Home</a><a href="/owner" data-run-link="/owner">Owner</a
+          ><a href="/capital" data-run-link="/capital">Capital</a
+          ><a href="/record" data-run-link="/record" aria-current="page"
+            >Record</a
+          ><a href="/theater" data-run-link="/theater">Theater</a
+          ><a href="/flow" data-run-link="/flow">Flow</a>
+        </nav>
+        <div class="header-tools">
+          <span class="network">Arc testnet</span
+          ><button
+            class="theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-label="Switch theme"
+            aria-pressed="false"
+          >
+            <svg
+              class="theme-moon"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M20 15.4A8.5 8.5 0 0 1 8.6 4 8.5 8.5 0 1 0 20 15.4Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg
+            ><svg
+              class="theme-sun"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="4"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg
+            ><span data-theme-label>Theme</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <aside
+      id="active-run-banner"
+      class="active-run-banner"
+      aria-label="Active server run"
+      hidden
+    >
+      <div class="shell">
+        <p>
+          <span class="status-dot" aria-hidden="true"></span
+          ><strong id="active-run-label">A run is in progress</strong
+          ><span id="active-run-detail" data-active-detail
+            >Continues across navigation</span
+          >
+        </p>
+        <a id="active-run-link" href="/theater"
+          >Return to active run <span aria-hidden="true">→</span></a
+        >
+      </div>
+    </aside>
+    <main id="main" class="shell">
+      <noscript
+        ><p class="notice warning">
+          JavaScript is required to read saved runs and use dashboard controls.
+          Product information and navigation remain available.
+        </p></noscript
+      >
+      <div id="connection-error" class="notice error" role="alert" hidden>
+        <p id="connection-error-text"></p>
+        <div class="actions">
+          <button type="button" class="button small" data-retry-state>
+            Retry connection</button
+          ><button type="button" class="button small" data-follow-current>
+            Follow current run
+          </button>
+        </div>
+      </div>
+      <div id="action-message" class="notice" role="status" hidden></div>
 
-<div class="lookup">
-  <input id="name" value="atlas.repayd.eth" spellcheck="false" />
-  <button onclick="resolve()">resolve</button>
-</div>
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">03 / Record</p>
+          <h1>Evidence over reputation.</h1>
+          <p>
+            The deployment, the decisions, and the final checks. A record you
+            can inspect without taking a score—or a story—on trust.
+          </p>
+        </div>
+        <p class="heading-aside">
+          Source-labeled. Run-scoped.<br />No simulated ENS resolution or
+          identity attestation.
+        </p>
+      </div>
+      <section class="run-toolbar" aria-label="Run selection">
+        <div class="field">
+          <label for="run-history">Viewing run</label
+          ><select id="run-history" data-run-select disabled>
+            <option>Loading saved runs…</option>
+          </select>
+        </div>
+        <div class="run-context" data-run-context>Loading saved state…</div>
+        <div class="actions">
+          <button
+            id="record-copy-run"
+            class="button small"
+            type="button"
+            data-copy="run"
+            disabled
+          >
+            Copy run ID</button
+          ><a
+            class="button small quiet"
+            data-run-link="/flow"
+            data-requires-run
+            aria-disabled="true"
+            tabindex="-1"
+            >Open receipts ↗</a
+          ><button type="button" class="button small" data-retry-state>
+            Sync state
+          </button>
+        </div>
+      </section>
+      <section class="surface" aria-labelledby="lookup-title">
+        <div class="section-head">
+          <h2 id="lookup-title">Find a saved record</h2>
+          <span class="pill">Local run archive</span>
+        </div>
+        <form id="record-lookup-form" class="inline-form">
+          <div class="field">
+            <label for="record-lookup"
+              >Full run ID, GuardAccount address, or run label</label
+            ><input
+              id="record-lookup"
+              name="record"
+              type="search"
+              required
+              placeholder="Paste a run ID or 0x address"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+          <button class="button" type="submit">
+            Look up record <span aria-hidden="true">→</span>
+          </button>
+        </form>
+        <p class="snapshot-note">
+          Searches the server's saved runs only. It does not resolve ENS names
+          or scan other wallets.
+        </p>
+        <div id="lookup-message" class="notice" role="status" hidden></div>
+        <ul
+          id="record-search-results"
+          class="search-results"
+          aria-label="Matching saved runs"
+        ></ul>
+      </section>
+      <div id="record-no-run" class="notice section" hidden>
+        No record selected. Choose a saved run above, search for one, or start a
+        fresh demonstration in Theater.
+      </div>
+      <div
+        id="record-outcome"
+        class="notice error section"
+        role="alert"
+        hidden
+      ></div>
+      <div class="two-column section">
+        <section aria-labelledby="record-meta-title">
+          <div class="section-head">
+            <h2 id="record-meta-title">Run identity</h2>
+            <span class="section-label">Not an attestation</span>
+          </div>
+          <dl id="record-metadata" class="ledger">
+            <div>
+              <dt>Run</dt>
+              <dd>Loading saved state…</dd>
+            </div>
+          </dl>
+        </section>
+        <section aria-labelledby="record-check-title">
+          <div class="section-head">
+            <h2 id="record-check-title">Verified outcomes</h2>
+          </div>
+          <div id="record-checks" class="check-list">
+            <p class="fine-print">
+              Only a final result supplies these checks. A successful process
+              exit is insufficient.
+            </p>
+          </div>
+          <p class="trust-note">
+            Owner-origin denial is a
+            <strong>local SDK and judgment demonstration</strong>, not a
+            fabricated insurance claim transaction. Each check shows its
+            attached receipt, when one exists.
+          </p>
+        </section>
+      </div>
+      <div class="two-column section">
+        <section class="surface" aria-labelledby="record-contract-title">
+          <div class="section-head">
+            <h2 id="record-contract-title">Deployment record</h2>
+            <span class="pill">Arc testnet</span>
+          </div>
+          <dl id="record-contracts" class="ledger"></dl>
+          <details class="disclosure">
+            <summary>
+              Recorded actors &amp; authorities<span
+                class="chevron"
+                aria-hidden="true"
+                >›</span
+              >
+            </summary>
+            <div class="disclosure-body">
+              <dl id="record-actors" class="ledger"></dl>
+            </div>
+          </details>
+          <details class="disclosure">
+            <summary>
+              Registry references, not attestations<span
+                class="chevron"
+                aria-hidden="true"
+                >›</span
+              >
+            </summary>
+            <div class="disclosure-body">
+              <p>
+                The deployment file may reference ERC-8004 registries. A
+                reference is not proof of registration, reputation, ENS
+                resolution, or World ID verification. The chain anchor is an
+                address, not a block number.
+              </p>
+              <dl id="record-registries" class="ledger"></dl>
+            </div>
+          </details>
+        </section>
+        <section aria-labelledby="record-policy-title">
+          <div class="section-head">
+            <h2 id="record-policy-title">Policy evidence</h2>
+          </div>
+          <div id="record-policy">
+            <p class="fine-print">Waiting for a verified policy event.</p>
+          </div>
+          <details class="disclosure">
+            <summary>
+              Recorded balance snapshots<span class="chevron" aria-hidden="true"
+                >›</span
+              >
+            </summary>
+            <div class="disclosure-body">
+              <div id="record-wallets" class="wallet-list"></div>
+              <p id="record-snapshot-note" class="snapshot-note">
+                No snapshot yet.
+              </p>
+            </div>
+          </details>
+        </section>
+      </div>
+      <section class="section" aria-labelledby="record-ledger-title">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Source by source</p>
+            <h2 id="record-ledger-title">The evidence journal</h2>
+          </div>
+          <span id="record-event-count" class="fine-print"
+            >Loading events…</span
+          >
+        </div>
+        <div id="record-events" class="evidence-list">
+          <div class="loading-state">Restoring the saved evidence journal…</div>
+        </div>
+      </section>
 
-<div class="record" id="record"></div>
-
-<p class="note">Any marketplace, hiring protocol, or other agent can price trust in this machine with one lookup.
-The record resolves from EN Sv2: policy hash, instruction hash-chain head, claim history.</p>
-
-<footer>REPAYD — the actuarial layer of the machine economy · this surface queries the Risk Subgraph</footer>
-
-<script>
-  const RECORDS = {
-    "atlas.repayd.eth": {
-      INSURED: '<span class="pill ok">yes</span> policy v1 · cap $2,500 · pool healthy',
-      DRIVING: '<span class="pill ok">94/100</span> 179-day clean streak · premium 0.72×',
-      CLAIMS: [
-        '<span class="pill warn">covered</span> $135.00 · external injection · look-alike address · recovered',
-        '<span class="pill warn">attempted</span> frozen in hold window · no loss',
-      ],
-      ALIBI_SDK: 'installed — instruction chain live',
-      BACKING: 'World-ID verified human',
-      POOL: 'junior $19,865 · senior $25,000 · solvent',
-      STATUS: 'ACTIVE since 2026-06',
-    },
-    "vex.repayd.eth": {
-      INSURED: '<span class="pill bad">scarred</span> policy v1 · cap $2,500',
-      DRIVING: '<span class="pill bad">12/100</span> 2-day streak · premium 5.00×',
-      CLAIMS: [
-        '<span class="pill bad">denied</span> $0.00 · OWNER-ORIGIN — owner-signed instruction proved',
-      ],
-      ALIBI_SDK: 'installed — the chain convicted the owner',
-      BACKING: 'World-ID verified human · 1 denied claim bound to identity',
-      POOL: '—',
-      STATUS: 'DECLINED for renewal',
-    },
-    "trux.repayd.eth": {
-      INSURED: '<span class="pill ok">yes</span> policy v1 · cap $1,200',
-      DRIVING: '<span class="pill ok">88/100</span> 41-day clean streak · premium 0.81×',
-      CLAIMS: [
-        '<span class="pill ok">dismissed</span> merchant address rotation — overturned by re-run, no fault, no scar',
-      ],
-      ALIBI_SDK: 'installed — instruction chain live',
-      BACKING: 'World-ID verified human',
-      POOL: '—',
-      STATUS: 'ACTIVE since 2026-08',
-    },
-  };
-
-  function render(name) {
-    const r = RECORDS[name];
-    const el = document.getElementById("record");
-    if (!r) {
-      el.innerHTML = `<div class="line"><b>resolve</b>${name} → not found (no REPAYD record)</div>`;
-      return;
-    }
-    let html = "";
-    for (const [k, v] of Object.entries(r)) {
-      if (k === "CLAIMS") {
-        html += `<div class="line"><b>${k}</b><div class="claims">${v.join("")}</div></div>`;
-      } else {
-        html += `<div class="line"><b>${k}</b><span>${v}</span></div>`;
-      }
-    }
-    el.innerHTML = html;
-  }
-
-  function resolve() {
-    render(document.getElementById("name").value.trim().toLowerCase());
-  }
-
-  render("atlas.repayd.eth");
-</script>
-</body>
+      <div
+        id="connection-status"
+        class="connection-line"
+        data-connection="offline"
+      >
+        <span
+          ><i class="status-dot" aria-hidden="true"></i
+          ><span id="connection-label">Connecting to saved state</span></span
+        ><span id="connection-age">Waiting for server</span>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <p>
+          <strong>REPAYD</strong> A testnet demonstration, not a real-money
+          insurance product.
+        </p>
+        <div class="footer-links">
+          <span>Arc · 5042002</span
+          ><a
+            href="https://testnet.arcscan.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Arc explorer ↗<span class="sr-only">
+              (opens in a new tab)</span
+            ></a
+          ><a href="/record" data-run-link="/record"
+            >Evidence &amp; provenance</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
 </html>

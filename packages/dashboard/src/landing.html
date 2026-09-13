@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Policy-bound agent spending, a verifiable trail, and covered-loss recovery. Explore the real REPAYD demonstration on Arc testnet."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Autonomy, with accountability — REPAYD</title>
+    <script src="/assets/theme.js"></script>
+    <link rel="stylesheet" href="/assets/dashboard.css" />
+    <script type="module" src="/assets/surfaces.js"></script>
+  </head>
+  <body data-page="landing">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/" aria-label="REPAYD home"
+          ><svg
+            class="brand-mark"
+            viewBox="0 0 32 32"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 26V6h10a7 7 0 0 1 0 14h-5m5 0 8 6M2 26h8"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="square"
+            /></svg
+          ><span
+            ><span class="brand-word">REPAYD</span
+            ><span class="brand-caption"
+              >Autonomy, with accountability.</span
+            ></span
+          ></a
+        >
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a href="/" aria-current="page">Home</a
+          ><a href="/owner" data-run-link="/owner">Owner</a
+          ><a href="/capital" data-run-link="/capital">Capital</a
+          ><a href="/record" data-run-link="/record">Record</a
+          ><a href="/theater" data-run-link="/theater">Theater</a
+          ><a href="/flow" data-run-link="/flow">Flow</a>
+        </nav>
+        <div class="header-tools">
+          <span class="network">Arc testnet</span
+          ><button
+            class="theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-label="Switch theme"
+            aria-pressed="false"
+          >
+            <svg
+              class="theme-moon"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M20 15.4A8.5 8.5 0 0 1 8.6 4 8.5 8.5 0 1 0 20 15.4Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg
+            ><svg
+              class="theme-sun"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="4"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg
+            ><span data-theme-label>Theme</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <aside
+      id="active-run-banner"
+      class="active-run-banner"
+      aria-label="Active server run"
+      hidden
+    >
+      <div class="shell">
+        <p>
+          <span class="status-dot" aria-hidden="true"></span
+          ><strong id="active-run-label">A run is in progress</strong
+          ><span id="active-run-detail" data-active-detail
+            >Continues across navigation</span
+          >
+        </p>
+        <a id="active-run-link" href="/theater"
+          >Return to active run <span aria-hidden="true">→</span></a
+        >
+      </div>
+    </aside>
+    <main id="main" class="shell">
+      <noscript
+        ><p class="notice warning">
+          JavaScript is required to read saved runs and use dashboard controls.
+          Product information and navigation remain available.
+        </p></noscript
+      >
+      <div id="connection-error" class="notice error" role="alert" hidden>
+        <p id="connection-error-text"></p>
+        <div class="actions">
+          <button type="button" class="button small" data-retry-state>
+            Retry connection</button
+          ><button type="button" class="button small" data-follow-current>
+            Follow current run
+          </button>
+        </div>
+      </div>
+      <div id="action-message" class="notice" role="status" hidden></div>
+
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">An agent safety protocol · Arc testnet</p>
+          <h1 id="hero-title">
+            Let agents move.<br /><em>Keep risk<br />in bounds.</em>
+          </h1>
+          <p>
+            Give your agent room to work, not an open cheque. REPAYD connects
+            spending rules, traceable decisions, and a pool that pays covered
+            losses.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="/owner" data-run-link="/owner"
+              >Open owner dashboard
+              <span class="arrow" aria-hidden="true">→</span></a
+            ><a class="button" href="/theater" data-run-link="/theater"
+              >Watch the demo</a
+            >
+          </div>
+          <div class="hero-caption">
+            <span>Real testnet receipts</span><span>Mintable demo token</span
+            ><span>Explicit trust assumptions</span>
+          </div>
+        </div>
+        <figure class="protocol-figure">
+          <div class="figure-label">
+            <span>THE PROTOCOL</span><span>FIG. 01</span>
+          </div>
+          <div class="guard-diagram">
+            <div class="diagram-origin">
+              <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <path
+                  d="M6 6h20v20H6zM11 12h10m-10 5h6m-6 5h10"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+              </svg>
+              <div>
+                <strong>One protected account</strong
+                ><span>Your policy. Your agent's spending key.</span>
+              </div>
+            </div>
+            <div class="diagram-route">
+              <span class="pill positive">ROUTINE</span
+              ><strong>Within the rules</strong>
+              <p>Known recipients. Capped payments.</p>
+            </div>
+            <div class="diagram-route">
+              <span class="pill warning">HOLD</span
+              ><strong>A reason to pause</strong>
+              <p>Unknown recipient. Evidence before release.</p>
+            </div>
+            <div class="diagram-route">
+              <span class="pill">REVERT</span><strong>A hard boundary</strong>
+              <p>Policy violations fail at the contract.</p>
+            </div>
+            <div class="diagram-recovery">
+              <strong>Covered loss → owner payout</strong
+              ><span aria-hidden="true">↗</span>
+            </div>
+          </div>
+          <figcaption>
+            A protocol map, not a live status display. Inspect an actual run to
+            see which path each transaction took.
+          </figcaption>
+        </figure>
+      </section>
+      <section class="landing-run" aria-label="Saved demonstration">
+        <div id="landing-run-content">
+          <span class="pill">Reading saved state</span>
+          <p>Checking for a run you can return to.</p>
+        </div>
+        <a id="landing-run-link" href="/theater">Explore the demo →</a>
+      </section>
+      <section class="editorial-section" aria-labelledby="approach-title">
+        <div>
+          <p class="eyebrow">Designed for the moments that matter</p>
+          <h2 id="approach-title">
+            Prevention is a layer.<br />Not a promise.
+          </h2>
+          <p>
+            An agent can follow a bad instruction. A watcher can miss a signal.
+            A useful safety system must account for both.
+          </p>
+        </div>
+        <ol class="numbered-story">
+          <li>
+            <span class="story-number">01</span>
+            <div>
+              <h3>Set the boundary before the payment.</h3>
+              <p>
+                The GuardAccount enforces the owner's policy: recipient
+                allowances, spending caps, and transaction velocity. Familiar
+                payroll can proceed; unfamiliar payments enter a hold.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span class="story-number">02</span>
+            <div>
+              <h3>Make every decision inspectable.</h3>
+              <p>
+                Follow recorded events from the first deployment to the final
+                result. Separate chain receipts from local judgments, and open
+                the exact transaction on Arc's explorer.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span class="story-number">03</span>
+            <div>
+              <h3>Account for what slips through.</h3>
+              <p>
+                The demo deliberately includes a controlled watcher
+                false-negative. A covered verdict drives an actual test-token
+                payout; owner-origin evidence demonstrates a local denial.
+              </p>
+            </div>
+          </li>
+        </ol>
+      </section>
+      <section class="truth-section" aria-labelledby="truth-title">
+        <div>
+          <p class="section-label">A demonstration you can interrogate</p>
+          <h2 id="truth-title">
+            Real chain activity.<br />Clearly marked assumptions.
+          </h2>
+        </div>
+        <div>
+          <p>
+            Deployments, payroll transfers, holds, policy reverts, releases, and
+            payouts are submitted to Arc testnet. Flow includes only hashes
+            captured by your selected run—not unrelated public-network activity.
+          </p>
+          <p>
+            Attack history and clock facts are constructed. The watcher uses a
+            local demo signer, not a live TEE. Owner decisions are scripted. The
+            token is mintable Demo USDC; no live ENS, World ID, or
+            investment-return claim is implied.
+          </p>
+          <a class="button" href="/theater" data-run-link="/theater"
+            >See the evidence unfold <span aria-hidden="true">→</span></a
+          >
+        </div>
+      </section>
+
+      <div
+        id="connection-status"
+        class="connection-line"
+        data-connection="offline"
+      >
+        <span
+          ><i class="status-dot" aria-hidden="true"></i
+          ><span id="connection-label">Connecting to saved state</span></span
+        ><span id="connection-age">Waiting for server</span>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <p>
+          <strong>REPAYD</strong> A testnet demonstration, not a real-money
+          insurance product.
+        </p>
+        <div class="footer-links">
+          <span>Arc · 5042002</span
+          ><a
+            href="https://testnet.arcscan.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Arc explorer ↗<span class="sr-only">
+              (opens in a new tab)</span
+            ></a
+          ><a href="/record" data-run-link="/record"
+            >Evidence &amp; provenance</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

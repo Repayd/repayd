@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-proof-state="pending">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="REPAYD at ETHOnline 2026: guarded agent spending, inspectable evidence, and conditional recovery. A source-grounded, sixteen-slide presentation.">
+  <meta name="color-scheme" content="light">
+  <title>REPAYD — Guarded autonomy. Accountable recovery.</title>
+  <link rel="stylesheet" href="/assets/dashboard.css">
+  <link rel="stylesheet" href="/assets/pitch.css">
+  <script src="/assets/pitch.js" defer></script>
+</head>
+<body class="pitch" data-page="pitch">
+<a class="skip-link screen-only" href="#pitch-deck">Skip to the presentation</a>
+<header class="pitch-topbar screen-only">
+  <a class="brand" href="/" aria-label="REPAYD home"><svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M6 26V6h10a7 7 0 0 1 0 14h-5m5 0 8 6M2 26h8" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></svg><span><span class="brand-word">REPAYD</span><span class="brand-caption">The pitch, with the receipts.</span></span></a>
+  <p class="pitch-context">ETHOnline 2026 <span>14 slides + 2 Q&amp;A appendices</span></p>
+  <a class="button small" href="/theater">Open live demo <span aria-hidden="true">↗</span></a>
+</header>
+<noscript><p class="pitch-noscript">JavaScript is off. All sixteen slides are available below; use your browser's Print command to save the deck. Live run evidence requires the local dashboard server.</p></noscript>
+<div class="pitch-stage">
+<main id="pitch-deck" class="pitch-deck" aria-label="REPAYD pitch presentation" tabindex="-1">
+
+<section class="pitch-slide slide--cover is-current" id="slide-01" data-title="Guarded autonomy" aria-labelledby="title-01">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>01 / The thesis</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body cover-layout">
+      <div class="cover-copy"><p class="slide-kicker">Agent safety, end to end</p><h1 id="title-01">Guarded autonomy.<br><em>Accountable recovery.</em></h1><p class="cover-lead">Protected agent wallets.<br>Evidence-based, conditional recovery.</p><p class="cover-position">A boundary before the payment.<br>A recovery path when a covered failure gets through.</p></div>
+      <figure class="cover-figure" aria-label="REPAYD combines a protected account, inspectable decisions, and a recovery pool">
+        <div class="figure-label"><span>THE ACCOUNTABILITY LOOP</span><span>FIG. 01</span></div>
+        <div class="cover-account"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M6 26V6h10a7 7 0 0 1 0 14h-5m5 0 8 6M2 26h8" stroke="currentColor" stroke-width="2" stroke-linecap="square"/></svg><div><span class="diagram-caption">01 / Set the boundary</span><strong>GuardAccount</strong><p>The owner's rules. The agent's spending key.</p></div></div>
+        <div class="cover-rail"><span class="rail-number">02</span><div><strong>Inspect the decision</strong><p>Recorded inputs. Signed verdict.</p></div></div>
+        <div class="cover-rail"><span class="rail-number">03</span><div><strong>Settle a covered loss</strong><p>Conditional payment from the pool to the owner.</p></div></div>
+        <figcaption>Not a promise that every attack is stopped.<br>A system that accounts for what happens next.</figcaption>
+      </figure>
+    </div>
+    <footer class="slide-footer"><p>Arc testnet · Mintable Demo USDC · A prototype, not a real-money insurance offering</p><span class="slide-folio">01 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-01" aria-label="Presenter notes for slide 1">
+    <h3>Opening · about 25 seconds</h3><p>Agents need room to act, but an open wallet is too much authority. REPAYD connects three things: an owner's spending policy, a record of how a decision was made, and a pool that can pay a covered loss. We do not claim perfect prevention. We demonstrate a boundary that works, a deliberately controlled failure of the watcher, and an actual testnet recovery payment.</p><p><strong>Say explicitly:</strong> This is an ETHOnline prototype using mintable Demo USDC on Arc testnet. No customer traction, production insurance, audited security, or guaranteed recovery is being represented.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide slide--ink" id="slide-02" data-title="The authority gap" aria-labelledby="title-02">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>02 / The problem</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-02">An instruction is not<br>payment authority.</h2><p>A poisoned page or invoice can enter the same context as a legitimate task.</p></div>
+      <figure class="authority-diagram" aria-label="Untrusted content enters an agent's context, crosses a trust boundary, and can become a payment">
+        <div class="authority-node"><span class="diagram-caption">UNTRUSTED INPUT</span><h3>Web. Tool. Invoice.</h3><p>“Use this new payment address.”</p></div>
+        <div class="authority-boundary"><span>Trust<br>boundary</span><i aria-hidden="true">→</i></div>
+        <div class="authority-node"><span class="diagram-caption">DELEGATED AGENT</span><h3>Context → action</h3><p>The spending key can turn text into a transaction.</p></div>
+        <span class="diagram-arrow" aria-hidden="true">→</span>
+        <div class="authority-node authority-settled"><span class="diagram-caption">SETTLEMENT</span><h3>Funds leave.</h3><p>A later detection is not a reversal.</p></div>
+      </figure>
+      <p class="slide-pullquote">Prevention reduces risk.<br><em>It does not fund recovery.</em></p>
+    </div>
+    <footer class="slide-footer"><p>Threat model, not an incident-rate claim · <a href="https://github.com/Repayd/repayd/blob/main/packages/demo/src/demo.ts">Source: constructed instruction scenarios in demo.ts</a></p><span class="slide-folio">02 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-02" aria-label="Presenter notes for slide 2">
+    <h3>The problem · about 25 seconds</h3><p>A payment agent reads things it did not author: websites, tools, invoices. The failure we care about is when that content is promoted into payment authority. Detection is important, but detecting something after settlement does not put the funds back. The product question is not just “can we block this?” It is “what can execute, what must wait, and what happens if a covered mistake still settles?”</p><p><strong>Do not overclaim:</strong> The demo uses supplied instruction scenarios; it is not a live external attack. We are not claiming that prompt injection explains all agent losses, or assigning an unsupported frequency to it.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-03" data-title="A bounded first market" aria-labelledby="title-03">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>03 / The starting point</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-03">Start where “normal”<br>can be defined.</h2></div>
+      <div class="beachhead-layout">
+        <div class="editorial-statement"><span class="diagram-caption">THE INITIAL WEDGE</span><p>Operational<br>spending.<br><em>Bounded autonomy.</em></p></div>
+        <dl class="use-case-ledger">
+          <div><dt><span>01</span>Payroll &amp; treasury</dt><dd>Known recipients, explicit sub-caps, daily limits.</dd></div>
+          <div><dt><span>02</span>API &amp; service buyers</dt><dd>Room for new vendors, with a review boundary and a budget.</dd></div>
+          <div><dt><span>03</span>Agent platforms</dt><dd>Provision the wallet and its spending policy together.</dd></div>
+        </dl>
+      </div>
+      <p class="slide-callout">Begin with repeatable operations—not unrestricted, high-frequency trading.</p>
+    </div>
+    <footer class="slide-footer"><p>Target use cases, not customer or adoption claims · <a href="https://github.com/Repayd/repayd/blob/main/contracts/src/GuardAccount.sol">Mechanism: recipient, amount, daily and velocity controls</a></p><span class="slide-folio">03 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-03" aria-label="Presenter notes for slide 3">
+    <h3>Beachhead · about 25 seconds</h3><p>We would begin where the owner can describe normal behavior: payroll, capped treasury operations, and service purchases. Fixed recipients can use a simple exact allowlist. New vendors need a separate review path, not a rule that silently treats unfamiliar addresses as safe. Agent platforms are a distribution hypothesis because they already decide how a wallet is provisioned.</p><p><strong>If asked about market size:</strong> We are not presenting TAM, users, signed pilots, or revenue. The first validation is whether these operators will attach a policy and pay for bounded exposure, and whether the resulting loss cost is supportable.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-04" data-title="One wallet, three lanes" aria-labelledby="title-04">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>04 / The product loop</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-04">One wallet. Three lanes.<br>A conditional recovery path.</h2></div>
+      <div class="mechanism-layout">
+        <div class="policy-block"><span class="diagram-caption">OWNER SETS POLICY</span><h3>GuardAccount</h3><ul><li>Exact recipient permissions</li><li>Per-transfer &amp; daily caps</li><li>Velocity &amp; hold window</li></ul><p>Enforced before a proposed transfer can settle.</p></div>
+        <div class="lane-ledger" aria-label="The three execution lanes">
+          <div><span class="lane-label lane-routine">ROUTINE</span><p>Known payee, within policy</p><strong>Execute</strong></div>
+          <div><span class="lane-label lane-held">ELEVATED</span><p>Unknown payee or elevated signal</p><strong>Hold → review</strong></div>
+          <div><span class="lane-label lane-reverted">VIOLATION</span><p>Hard rule breached</p><strong>Revert</strong></div>
+          <p class="lane-footnote">A clean signed verdict can release a hold. A frozen hold does not need an owner tap to keep the payment stopped.</p>
+        </div>
+      </div>
+      <div class="settlement-line"><span>AFTER A COVERED, SETTLED LOSS</span><p>Loss evidence <i aria-hidden="true">→</i> signed verdict <i aria-hidden="true">→</i> pool pays owner</p><small>Subject to policy and available capital. A release is not a claim.</small></div>
+    </div>
+    <footer class="slide-footer"><p><a href="https://github.com/Repayd/repayd/blob/main/contracts/src/GuardAccount.sol">GuardAccount: propose / releaseHold / decide</a> · <a href="https://github.com/Repayd/repayd/blob/main/contracts/src/VerdictContract.sol">VerdictContract: submitVerdict / _route</a></p><span class="slide-folio">04 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-04" aria-label="Presenter notes for slide 4">
+    <h3>The mechanism · about 35 seconds</h3><p>The owner installs the rules. The guard applies hard limits first, then classifies the remaining payment. Routine payments execute; unfamiliar recipients are held; violations revert. The watcher can sign a release or a freeze. A freeze already stops this payment—owner action is an override or cancellation, not a prerequisite for protection. A covered-loss verdict is a separate message that calls the pool in the same transaction.</p><p><strong>If asked about timing:</strong> The demo policy has a 120-second review window, but a clean verdict need not wait the full two minutes. Silence is not automatic permission to pay. The owner can resolve a hold, and the lapse path can extend and then freeze it. The new demo deliberately broadcasts the 900-unit violation, producing a real reverted receipt and gas cost; do not repeat the old report's “no transaction exists” description.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-05" data-title="Unknown is held" aria-labelledby="title-05">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>05 / A new payee</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-05">Unknown is held.<br>Low risk is not certainty.</h2></div>
+      <div class="assessment-layout">
+        <ol class="rule-list"><li><span>01</span><div><h3>Match the whole address.</h3><p>No name similarity. No fuzzy match.</p></div></li><li><span>02</span><div><h3>Keep the allowlist owner-controlled.</h3><p>A new recipient is never auto-added.</p></div></li><li><span>03</span><div><h3>Assess the held proposal.</h3><p>The local watcher scores supplied facts.</p></div></li></ol>
+        <div class="score-sheet"><div class="figure-label"><span>CONTROLLED DEMO INPUTS</span><span>LOCAL SCORING</span></div><table class="pitch-table score-table"><caption class="sr-only">Selected watcher signals in the two scripted scenarios</caption><thead><tr><th scope="col">Signal</th><th scope="col">Fresh / 04:00</th><th scope="col">Lookalike / noon</th></tr></thead><tbody><tr><th scope="row">Not allowlisted</th><td>+1</td><td>+1</td></tr><tr><th scope="row">No prior history</th><td>+1</td><td>0 <small>supplied 30 days</small></td></tr><tr><th scope="row">Unusual hour</th><td>+1</td><td>0</td></tr><tr class="score-total"><th scope="row">Score → decision</th><td>3 → FREEZE</td><td>1 → RELEASE</td></tr></tbody></table><p>Threshold: <strong>≥ 3 freezes; &lt; 3 releases.</strong><br>A deterministic rule, not a calibrated loss probability.</p></div>
+      </div>
+      <p class="slide-small-note">Other implemented signals include curfew, blocklist strikes, drainer patterns, amount deviation and owner-signed novelty. Input quality remains a trust boundary.</p>
+    </div>
+    <footer class="slide-footer"><p><a href="https://github.com/Repayd/repayd/blob/main/contracts/src/GuardAccount.sol">GuardAccount._classify</a> · <a href="https://github.com/Repayd/repayd/blob/main/packages/engine/src/engine.ts">judgeHold</a> · <a href="https://github.com/Repayd/repayd/blob/main/packages/demo/src/demo.ts">Supplied histories: demo.ts</a></p><span class="slide-folio">05 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-05" aria-label="Presenter notes for slide 5">
+    <h3>Why the lookalike matters · about 35 seconds</h3><p>The guard is not fooled by the lookalike. It compares full addresses and holds both unknown recipients. The difference happens in the watcher. The fresh case scores one point for being unknown, one for no history, and one for the simulated unusual hour: three, so freeze. For the lookalike we deliberately supply a thirty-day history and noon activity. Only the unknown-recipient point remains, so the watcher releases. That is the controlled false negative.</p><p><strong>If asked why not deny all new recipients:</strong> For a fixed payroll list, exact allowlisting may be enough. Service-buying agents need a bounded path to legitimate new vendors. We do not pretend that this heuristic proves safety. The hold is on chain; the score and the facts used here are local, constructed inputs. No live reputation oracle or TEE is claimed.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-06" data-title="Evidence before authority" aria-labelledby="title-06">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>06 / The evidence boundary</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-06">Bind the decision.<br>Be honest about the trust.</h2></div>
+      <div class="evidence-columns">
+        <div><span class="evidence-index">01 / THE RULES</span><h3>Policy hash</h3><p>Versioned terms. Covered claims check the current policy hash.</p><code>policyHash</code></div>
+        <div><span class="evidence-index">02 / THE INPUTS</span><h3>Instruction chain</h3><p>Linked records. Owner-session signatures can be checked.</p><code>previous → digest → next</code></div>
+        <div><span class="evidence-index">03 / THE AUTHORITY</span><h3>Watcher signature</h3><p>EIP-712 binds the signed fields to a signer and deployment.</p><code>signer + domain + verdict</code></div>
+      </div>
+      <div class="trust-boundary-note"><p>A valid signature proves <em>who signed</em>.<br>Not independently that a loss happened.</p><span>Today: a local signer and supplied history.<br>Production needs authenticated capture, isolated keys and trustworthy loss evidence.</span></div>
+    </div>
+    <footer class="slide-footer"><p><a href="https://github.com/Repayd/repayd/blob/main/packages/sdk/src/index.ts">SDK: commit / alibiFor / verifyChain</a> · <a href="https://github.com/Repayd/repayd/blob/main/contracts/src/VerdictContract.sol">VerdictContract: typed signatures and covered-claim checks</a></p><span class="slide-folio">06 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-06" aria-label="Presenter notes for slide 6">
+    <h3>Trust, precisely · about 35 seconds</h3><p>We bind the rules, the recorded instruction, and the authority that signed the verdict. Those are useful guarantees, but they are not interchangeable with truth. EIP-712 authenticates a message and its domain. It does not independently verify a token loss or prove that captured instructions are complete. Today, the demo runner checks receipts and balances before its configured local watcher signs the claim.</p><p><strong>If challenged on the “alibi”:</strong> An owner-signed record can support denial if the capture path is authenticated and the signing key is isolated. The SDK's caller supplies origin; a hash chain alone cannot prevent selective capture, a rebuilt history, or a compromised key. This demo has no TEE cosignature and no external commitment proving capture completeness. The current contract trusts the watcher-reported loss. Covered-claim validation and hold-release validation are separate paths; do not imply every hold policy field is independently re-evaluated on chain.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-07" data-title="Prevention and a real residual loss" aria-labelledby="title-07">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>07 / The demonstration</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading heading-with-note"><h2 id="title-07">Two moments.<br>One honest failure model.</h2><p>Scripted walkthrough<br><strong>Demo USDC, not real money</strong></p></div>
+      <div class="demo-pair">
+        <div class="demo-case"><span class="diagram-caption">01 / THE PAYMENT STOPPED</span><h3>Fresh destination</h3><ol class="case-steps"><li><span>150 proposed</span><strong>HELD</strong></li><li><span>Local watcher verdict</span><strong>FREEZE</strong></li><li><span>Scripted owner cancellation</span><strong>RESOLVED</strong></li></ol><p class="case-result"><span>0</span> received by the fresh destination</p></div>
+        <div class="demo-case demo-case-loss"><span class="diagram-caption">02 / THE WATCHER MISSED</span><h3>Lookalike destination</h3><ol class="case-steps"><li><span>Unknown address</span><strong>HELD FIRST</strong></li><li><span>Controlled false-negative release</span><strong>150 SETTLES</strong></li><li><span>Loss checked, then covered verdict</span><strong>135 TO OWNER</strong></li></ol><p class="case-result"><span>150 − 15 = 135</span> loss − 10% deductible = payout</p></div>
+      </div>
+      <div class="demo-wall"><strong>The hard stop: 900 → mined REVERTED.</strong><span>No token transfer; gas still spent. Recovery does not reverse the 150 transfer.</span></div>
+    </div>
+    <footer class="slide-footer"><p>Code-defined walkthrough; attached run evidence is on slide 08 · <a href="https://github.com/Repayd/repayd/blob/main/packages/demo/src/demo.ts">Current demo.ts: containment → policy block → loss → payout</a></p><span class="slide-folio">07 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-07" aria-label="Presenter notes for slide 7">
+    <h3>The two moments · about 40 seconds</h3><p>First, four ordinary payrolls move 180, 310, 90 and 220—800 total. The fresh 150-unit payment is held and frozen; nothing leaves. A 900-unit proposal produces a genuine reverted transaction. Then the lookalike is also held. We deliberately make the watcher miss by supplying benign history. A signed clean release really sends 150 to that address. Only after checking the transfer and balance deltas do we submit a covered verdict that pays the owner 135.</p><p><strong>The distinction that matters:</strong> This is not the stale historical sequence where a held proposal stood in for an actual loss. Release and claim are separate transactions. The 135 is paid by the pool, not clawed back from the recipient. Expected final snapshots are guard 3,050; owner 135; lookalike 150; fresh 0; junior 19,865; senior 25,000; daily spend 950 and count 5. Those are the programmed expectations here, not a claim that this deck has attached a completed run yet.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-08" data-title="Inspect the verified receipt" aria-labelledby="title-08">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>08 / The proof</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-08">Inspect the result.<br>Not just the replay.</h2></div>
+      <div class="proof-layout">
+        <div class="proof-method"><ol class="rule-list"><li><span>01</span><div><h3>Check the loss receipt.</h3><p>The clean release, not the held proposal.</p></div></li><li><span>02</span><div><h3>Check the balance deltas.</h3><p>Guard debit and recipient credit agree.</p></div></li><li><span>03</span><div><h3>Check the payout receipt.</h3><p>Verdict, pool payment and owner credit.</p></div></li></ol><p>Chain activity is real.<br>Scoring, SDK provenance and the watcher key are local.</p></div>
+        <section class="proof-sheet" id="proof-sheet" aria-labelledby="proof-heading" aria-busy="false">
+          <div class="proof-sheet-head"><h3 id="proof-heading">Completed-run evidence</h3><span id="proof-badge" class="proof-badge">Not attached</span></div>
+          <dl class="proof-identifiers"><div><dt>Run ID</dt><dd id="proof-run-id">No verified run attached</dd></div><div><dt>Guard</dt><dd id="proof-guard">Awaiting the recorded deployment</dd></div><div><dt>Scope</dt><dd id="proof-blocks">Arc testnet · 5042002 · Demo USDC</dd></div></dl>
+          <dl class="proof-facts"><div><dt>Checks passed</dt><dd id="proof-checks">—</dd></div><div><dt>Owner snapshot</dt><dd id="proof-owner">—</dd></div><div><dt>Lookalike snapshot</dt><dd id="proof-lookalike">—</dd></div></dl>
+          <div class="proof-receipt"><span class="diagram-caption">PAYOUT TRANSACTION / FULL EXPLORER LINK</span><a id="proof-payout-link" class="receipt-hash" aria-disabled="true">No verified payout attached</a></div>
+          <div class="proof-actions"><a id="proof-flow-link" aria-disabled="true">Inspect this run in Flow <span aria-hidden="true">↗</span></a><button type="button" id="proof-refresh" class="button small screen-only" disabled>Refresh proof</button></div>
+          <p id="proof-message" class="proof-message" role="status">Run the live demonstration to attach a verified receipt.</p>
+        </section>
+      </div>
+    </div>
+    <footer class="slide-footer"><p>Source: saved, completed, runner-verified <a href="/api/demo/state">/api/demo/state</a>; this page does not independently re-audit RPC data · Six checks include local provenance</p><span class="slide-folio">08 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-08" aria-label="Presenter notes for slide 8">
+    <h3>Show the evidence · about 30 seconds</h3><p>This panel only attaches a completed Arc-testnet run with a verified result and all six named outcome checks. It chooses the newest eligible run, not an in-progress run with optimistic numbers. The payout link is the full captured explorer URL, and Flow is scoped to the same run ID. The proof covers payroll, containment, a real policy revert, an actual residual loss, a payout, and a local owner-origin check.</p><p><strong>Provenance of this panel:</strong> The dashboard archive publishes the runner's receipt and balance checks. Loading the deck is a read-only request; it does not run transactions, call Circle, or perform an independent chain audit. If no run qualifies or the server is unavailable, the panel says so and supplies no invented hash or balance. The previous slide remains a clearly labeled code-defined walkthrough. A historical report receipt is never substituted into this panel.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-09" data-title="The economics, without hand-waving" aria-labelledby="title-09">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>09 / Risk &amp; economics</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-09">Price the exposure.<br>Respect the capital.</h2></div>
+      <div class="economics-layout">
+        <figure class="capital-figure"><div class="figure-label"><span>DEMO CAPITAL / START</span><span>45,000 DEMO USDC</span></div><div class="capital-stack"><div class="capital-senior"><span>Senior</span><strong>25,000</strong><small>Absorbs loss after junior</small></div><div class="capital-junior"><span>Junior</span><strong>20,000</strong><small>First loss</small></div></div><figcaption>Walkthrough after a 135 claim:<br><strong>19,865 junior + 25,000 senior = 44,865</strong></figcaption></figure>
+        <div class="tariff-sheet"><span class="diagram-caption">PROTOTYPE MONTHLY TARIFF / ILLUSTRATION</span><div class="tariff-base"><span>Coverage cap × monthly base rate</span><p>$2,500 × 2% <strong>= $50/mo</strong></p></div><dl class="tariff-ledger"><div><dt>With SDK factor</dt><dd>$50 × 0.9 <strong>$45/mo</strong></dd></div><div><dt>Then first-claim factor</dt><dd>$45 × 3 <strong>$135/mo</strong></dd></div></dl><p>All other multipliers held neutral. First-claim load applies for six months in the prototype tariff.</p><p class="tariff-caveat">This is a quote formula.<br><strong>Not validated underwriting or proof of collection.</strong></p></div>
+      </div>
+      <p class="slide-small-note">Demo engine payout: min(loss × 90%, 2,500). Settlement also requires an accepted claim and sufficient pool capital. Automated recurring premium collection is not complete.</p>
+    </div>
+    <footer class="slide-footer"><p><a href="https://github.com/Repayd/repayd/blob/main/packages/pricing/src/index.ts">Tariff: computePremium</a> · <a href="https://github.com/Repayd/repayd/blob/main/packages/engine/src/types.ts">Payout: computePayout</a> · <a href="https://github.com/Repayd/repayd/blob/main/contracts/src/MutualPool.sol">Capital: payout / recordPremium</a></p><span class="slide-folio">09 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-09" aria-label="Presenter notes for slide 9">
+    <h3>Economic discipline · about 40 seconds</h3><p>The demo seeds 45,000 mintable tokens: 20,000 junior, 25,000 senior. Junior takes the 135-unit claim, leaving 19,865; senior stays at 25,000. The tariff is separate arithmetic: a 2,500-dollar cap times two percent per month is 50; the SDK factor brings that to 45; a first-claim factor of three produces 135 per month, with other factors neutral. The identical number 135 for payout and premium is a coincidence, not a linkage.</p><p><strong>Defensible boundaries:</strong> Two percent is monthly, not annual: the neutral 50 monthly quote is 600 over twelve months, or 24% of the cap on a simple, non-compounded basis. This has not been calibrated to loss data. The engine computes the 10% deductible; the contract checks bounds and trusts the signed reported loss, rather than reconstructing that loss or recomputing the exact engine formula. A recordPremium transfer helper exists; automated recurring debits and premium distribution are not demonstrated. Forty-five thousand divided by a 2,500 cap is eighteen cap-sized claims before other flows—not a solvency model.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-10" data-title="Rails and evidence labels" aria-labelledby="title-10">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>10 / The load-bearing rails</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-10">Use the rails.<br>Keep the evidence separate.</h2></div>
+      <table class="pitch-table rails-table"><caption class="sr-only">Integration roles and the scope of the supporting evidence</caption><thead><tr><th scope="col">Rail</th><th scope="col">Its job</th><th scope="col">Evidence boundary</th></tr></thead><tbody>
+        <tr><th scope="row">Arc</th><td>Guard, transfers, verdict &amp; pool settlement</td><td><span class="evidence-tag current">CURRENT DEMO</span><a href="#slide-08">Completed-run receipt on slide 08</a></td></tr>
+        <tr><th scope="row">The Graph</th><td>Protocol history + standard-registry indexing</td><td><span class="evidence-tag">REPORTED 2026-09-12</span><span><a href="https://api.studio.thegraph.com/query/1760165/repayd-risk-arc/v0.1.3">Risk</a> + <a href="https://api.studio.thegraph.com/query/1760165/repayd/v0.1.0">registry</a> Studio endpoints</span></td></tr>
+        <tr><th scope="row">Hedera</th><td>x402 API payments + HCS audit trail</td><td><span class="evidence-tag">REPORTED 2026-09-12</span><span><a href="https://hashscan.io/testnet/transaction/0.0.7162784-1789189943-758655274">Paid request</a> · <a href="https://hashscan.io/testnet/topic/0.0.10493275">HCS topic</a> · <a href="https://hashscan.io/testnet/schedule/0.0.10493353">one schedule</a></span></td></tr>
+        <tr><th scope="row">ERC-8004</th><td>Agent identity, validation &amp; reputation</td><td><span class="evidence-tag">REPORTED 2026-09-12</span><a href="https://testnet.arcscan.app/tx/0x0b84127d140560e56e1112c1faea95c87f2d467ce32120e25b8f939f7acabbae">Agent 894341 on the historical stack</a></td></tr>
+        <tr><th scope="row">ENS / Sepolia</th><td>A portable, authored résumé</td><td><span class="evidence-tag">REPORTED 2026-09-12</span><span>atlasrepayd.eth · not fresh risk evidence</span></td></tr>
+        <tr><th scope="row">Circle</th><td>Wallet &amp; Gateway reads</td><td><span class="evidence-tag gated">READS REPORTED / WRITES GATED</span><span>Create + spend require an entity secret</span></td></tr>
+      </tbody></table>
+      <p class="slide-small-note">A new demo stack does not automatically register ERC-8004, retarget subgraphs, refresh ENS, or perform Circle mutations.</p>
+    </div>
+    <footer class="slide-footer"><p>Historical source: <a href="https://github.com/Repayd/repayd/blob/main/docs/REPAYD_STATUS_REPORT.md">user-supplied status report, dated 2026-09-12, §§3.1–3.6</a> · Reported integration state is not a fresh live check</p><span class="slide-folio">10 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-10" aria-label="Presenter notes for slide 10">
+    <h3>Integration evidence · about 40 seconds</h3><p>Arc is the settlement layer in the new demonstration. The other integrations have separately reported historical evidence: two Graph Studio subgraphs; paid x402 requests, an HCS topic and one scheduled transfer on Hedera; ERC-8004 identity and reputation for agent 894341; and an authored ENS résumé on Sepolia. The report also records authenticated Circle reads, with create and spend still gated by the entity secret. These are not automatically refreshed for a new stack.</p><p><strong>Keep the categories separate:</strong> The historical Arc payout is <a href="https://testnet.arcscan.app/tx/0xed020f97235164333e416ae494c6b24462a6884e1aa2ba1a1898b85d07a299f6">0xed020f97…99f6</a>, reported 2026-09-12; it is not used as the new run's proof. Hedera's second reported paid request is <a href="https://hashscan.io/testnet/transaction/0.0.7162784-1789190197-536086930">0.0.7162784-1789190197-536086930</a>. Those payments are API usage fees, not recurring insurance-premium drafts. A scheduled transaction is one transfer; recurrence needs separate scheduling and authorization. ENS text is authored, not independent underwriting truth. This deck never calls Circle.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-11" data-title="Coverage at wallet creation" aria-labelledby="title-11">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>11 / The business wedge</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-11">Embed the boundary<br>when the wallet is born.</h2></div>
+      <div class="business-layout">
+        <figure class="creation-flow"><span class="diagram-caption">PROPOSED DISTRIBUTION MOTION</span><div><span>Agent platform</span><small>Provisions a wallet</small></div><i aria-hidden="true">↓</i><div class="creation-core"><strong>Coverage API</strong><small>Quote → policy → guarded account</small></div><i aria-hidden="true">↓</i><div><span>Agent operates</span><small>Within the owner's boundaries</small></div></figure>
+        <div class="business-copy"><dl class="business-ledger"><div><dt>Who funds coverage?</dt><dd>The owner or the platform.</dd></div><div><dt>Who backs recovery?</dt><dd>Capital providers in the pool.</dd></div><div><dt>What is metered separately?</dt><dd>Coverage &amp; risk API usage.</dd></div></dl><p class="business-thesis">A proposed business model:<br><em>policy premiums + service usage.</em></p></div>
+      </div>
+      <p class="slide-small-note">Validate willingness to attach coverage, realized loss cost and retained premium before scaling. No revenue, pilot, adoption or automatic-billing claim is implied.</p>
+    </div>
+    <footer class="slide-footer"><p>Commercial proposal, not traction · <a href="https://github.com/Repayd/repayd/blob/main/docs/REPAYD_STATUS_REPORT.md">Report §§3.4 &amp; 4: metered API and config-gated policy attachment</a></p><span class="slide-folio">11 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-11" aria-label="Presenter notes for slide 11">
+    <h3>Distribution and revenue · about 30 seconds</h3><p>The proposed entry point is wallet creation. A platform can offer an owner a policy and a quote before handing an agent a spending key. The owner or platform would fund coverage, while separate pool capital would fund claims. Metered API fees are a separate service revenue path. We have code for the coverage API and a config-gated attachment bridge; that is not the same as a completed commercial onboarding or recurring billing system.</p><p><strong>If asked who is paying today:</strong> Do not imply customers. The historical Hedera testnet payments demonstrate usage settlement. They do not establish paid insurance demand, recurring premiums, or investor capital. The next commercial evidence would be a bounded operator pilot with measured attachment, incident, claims and retention data.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide" id="slide-12" data-title="One accountable workflow" aria-labelledby="title-12">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>12 / The distinction</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-12">Not another layer<br>that stops at “blocked.”</h2></div>
+      <div class="scope-ledger"><div><span class="scope-index">CONTROL</span><h3>What may execute?</h3><p>Policy-bound spending. Unknown recipients enter a hold.</p></div><div><span class="scope-index">PROVENANCE</span><h3>What informed the decision?</h3><p>Recorded instruction history and authenticated verdict fields.</p></div><div><span class="scope-index">RECOVERY</span><h3>What happens after a covered miss?</h3><p>A conditional claim path connected to actual pool capital.</p></div></div>
+      <div class="workflow-band"><span>Before the payment</span><i aria-hidden="true">→</i><strong>One accountable workflow</strong><i aria-hidden="true">→</i><span>After a covered loss</span></div>
+      <p class="slide-small-note">Wallet controls and detection remain useful. REPAYD's product thesis is to connect them to provenance and conditional settlement—not to claim that alternatives do not exist.</p>
+    </div>
+    <footer class="slide-footer"><p>Design comparison, not a competitor census · <a href="https://github.com/Repayd/repayd">Source: GuardAccount + agent SDK + VerdictContract + MutualPool</a></p><span class="slide-folio">12 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-12" aria-label="Presenter notes for slide 12">
+    <h3>Differentiation · about 25 seconds</h3><p>Wallet controls answer what may execute. Detection answers whether an action looks suspicious. Neither function alone answers how an eligible loss is settled. Our distinction is the connected workflow: execution controls, a recorded decision trail, and conditional capital settlement. We can use other detection and wallet infrastructure; this is not an argument that those layers are useless.</p><p><strong>If asked about competitors or defensibility:</strong> We are not claiming “first,” “only,” or zero competitors. The defensibility we would have to earn is reliable capture and adjudication, useful integration at wallet creation, better measured loss experience, and disciplined capital management. The historical hackathon-corpus counts are not market evidence and are intentionally absent.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide slide--ink" id="slide-13" data-title="Earn the right to underwrite" aria-labelledby="title-13">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>13 / The production gates</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body">
+      <div class="slide-heading heading-with-note"><h2 id="title-13">Earn the right<br>to underwrite.</h2><p>Explicit open work.<br><strong>Not hidden completed claims.</strong></p></div>
+      <ol class="production-gates"><li><span>01</span><h3>Trustworthy inputs</h3><p>Authenticated capture, isolated signer keys and verifiable attestation.</p></li><li><span>02</span><h3>Trustworthy loss proof</h3><p>Receipt-bound claims and contract / engine enforcement alignment.</p></li><li><span>03</span><h3>Supportable capital</h3><p>Calibrated pricing, correlated-loss limits, liquidity stress and real reinsurance.</p></li><li><span>04</span><h3>A deployable product</h3><p>Security review, integration refresh, authorized billing and regulatory review.</p></li></ol>
+      <p class="slide-callout">Demonstrated: testnet controls and conditional settlement.<br>Not claimed: audited security, a live TEE, actuarial validation or guaranteed recovery.</p>
+    </div>
+    <footer class="slide-footer"><p>Production requirements, not a dated delivery promise · <a href="https://github.com/Repayd/repayd/blob/main/contracts/src/VerdictContract.sol">Current trust boundary</a> · <a href="https://github.com/Repayd/repayd/blob/main/contracts/src/MutualPool.sol">Current capital boundary</a></p><span class="slide-folio">13 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-13" aria-label="Presenter notes for slide 13">
+    <h3>The next proof to earn · about 35 seconds</h3><p>A working conditional payout is not a finished insurer. First, capture must be authenticated and keys isolated; an attestation needs a verifiable trust chain, not a successful HTTP response. Second, the claim must be bound to trustworthy settlement evidence and contract enforcement must match the intended payout rule. Third, rates and aggregate exposure need real loss data and correlated-loss stress. Finally, we need security and regulatory review, refreshed integrations, and authorized collection.</p><p><strong>Be precise about gaps:</strong> The watcher currently reports the loss to the contract. The demo runner checks that loss, but those checks are not independent on-chain proof. A per-claim cap does not establish a policy-period aggregate limit or portfolio solvency. Reinsurance is a future hook, not live backing. Premium collection has a helper, not an end-to-end recurring authorization product. Do not equate this with deposit protection, a guarantee, or audited production readiness.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide slide--closing" id="slide-14" data-title="Accountability makes autonomy usable" aria-labelledby="title-14">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>14 / The invitation</span><span class="edition">ETHOnline 2026</span></header>
+    <div class="slide-body closing-layout">
+      <div><p class="slide-kicker">Guarded autonomy. Accountable recovery.</p><h2 id="title-14">Wallets enable<br>autonomy.<br><em>Accountability<br>makes it usable.</em></h2></div>
+      <div class="closing-aside"><svg class="closing-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M6 26V6h10a7 7 0 0 1 0 14h-5m5 0 8 6M2 26h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg><p>Watch the boundary hold.<br>Watch a controlled miss settle.<br>Follow the recovery receipt.</p><a class="closing-cta" href="/theater">Watch the live demo <span aria-hidden="true">↗</span></a><a class="closing-repo" href="https://github.com/Repayd/repayd">github.com/Repayd/repayd</a><a class="closing-proof" href="#slide-08">Return to the run evidence <span aria-hidden="true">→</span></a></div>
+    </div>
+    <footer class="slide-footer"><p>ETHOnline 2026 · Testnet prototype · Open source, explicit assumptions, inspectable receipts</p><span class="slide-folio">14 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-14" aria-label="Presenter notes for slide 14">
+    <h3>Close · about 20 seconds</h3><p>Wallets enable autonomy. Accountability makes it usable. Our invitation is simple: inspect the boundary, the actual residual loss, and the recovery receipt. Start with the live demonstration, then open the run-scoped Flow ledger or the repository. The story is not “trust our animation.” It is “follow the evidence, and challenge the assumptions.”</p><p><strong>Transition:</strong> The next two slides are Q&amp;A backups. They cover exact allowlisting, watcher trust, owner-origin evidence, premiums, and what happens when the pool cannot pay.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide slide--appendix" id="slide-15" data-title="Q&A — controls and trust" aria-labelledby="title-15">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>A1 / Controls &amp; trust</span><span class="edition">Q&amp;A</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-15">Hard questions.<br>Straight answers.</h2></div>
+      <dl class="qa-ledger"><div><dt>Why not just<br>an allowlist?</dt><dd>For fixed recipients, that works. REPAYD uses exact address matching. The additional path is for legitimate new vendors: hold, assess, then release or freeze. Only the owner maintains the list.</dd></div><div><dt>Who is trusted<br>to release funds?</dt><dd>The configured watcher key can authorize a clean release. Here it is a local signer using supplied facts. A frozen payment stays stopped without an owner tap; the owner can override.</dd></div><div><dt>Can an owner<br>fake a hack?</dt><dd>A signed owner record can support denial, but only under capture and key-isolation assumptions. A hash chain is not complete capture. A signature authenticates a statement; it does not prove the statement is true.</dd></div></dl>
+      <p class="slide-small-note">Hold release and covered claim are distinct paths. The current contract trusts watcher-reported loss; the demo checks actual settlement before signing.</p>
+    </div>
+    <footer class="slide-footer"><p><a href="https://github.com/Repayd/repayd/blob/main/contracts/src/GuardAccount.sol">GuardAccount</a> · <a href="https://github.com/Repayd/repayd/blob/main/contracts/src/PolicyRegistry.sol">PolicyRegistry.attach</a> · <a href="https://github.com/Repayd/repayd/blob/main/packages/sdk/src/index.ts">SDK capture and signature checks</a></p><span class="slide-folio">15 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-15" aria-label="Presenter notes for slide 15">
+    <h3>Q&amp;A · control and trust</h3><p><strong>“Is this an if/else allowlist?” — 30-second answer:</strong> The guard deliberately uses a simple exact match; that is the correct primitive for fixed payroll recipients. A one-character lookalike is not allowlisted. The product work is the path for new payees, an inspectable decision, and conditional recovery if an authorized release is wrong. Known payees still face hard caps and other policy conditions. A recipient sub-cap can replace the global per-transfer cap: that is why Bob's 310 payment fits the demo's explicit 400 sub-cap despite the general 200 limit.</p><p><strong>“What if the watcher lies or disappears?” — 30-second answer:</strong> Its current signature is trusted authority, not independent truth. It can make a bad release decision, which the demo intentionally shows. No verdict is not automatic permission to pay; pending holds have a lapse/freeze path, and frozen funds do not transfer without an authorized action. Production needs isolated signing, trustworthy data, and independently defensible claim evidence.</p><p><strong>“Why can't the owner manufacture an external instruction?” — 30-second answer:</strong> The current local SDK alone cannot rule that out. It verifies a recorded owner signature and chain integrity, but the caller supplies origin and capture completeness is not independently proved. A fully authenticated capture boundary and isolated owner key are required to make attribution meaningful. We demonstrate a local owner-origin denial; we do not claim universal first-party-fraud prevention.</p>
+  </aside>
+</section>
+
+<section class="pitch-slide slide--appendix" id="slide-16" data-title="Q&A — premiums and pool liquidity" aria-labelledby="title-16">
+  <div class="slide-page">
+    <header class="slide-masthead"><span class="deck-wordmark">REPAYD</span><span>A2 / Claims &amp; capital</span><span class="edition">Q&amp;A</span></header>
+    <div class="slide-body">
+      <div class="slide-heading"><h2 id="title-16">Who pays?<br>What if the pool cannot?</h2></div>
+      <dl class="qa-ledger"><div><dt>What qualifies<br>for recovery?</dt><dd>The demonstrated path combines a settled loss, external-origin evidence and a policy breach. A watcher signs the claim; policy checks, the cap and available capital still apply. Demo math: 150 × 90% = 135.</dd></div><div><dt>What exactly<br>is priced?</dt><dd>A prototype monthly quote on the coverage cap. Owner- or platform-funded cover is the business proposal. A premium transfer helper exists; recurring collection is not complete. Hedera x402 fees are separate API usage charges.</dd></div><div><dt>What if liquidity<br>is insufficient?</dt><dd>Junior absorbs loss first, then senior. Insufficient capital reverts settlement and the associated acceptance. There is no guaranteed payout, automatic bailout or live reinsurance backing.</dd></div></dl>
+      <div class="appendix-equation"><span>CAPITAL DISCIPLINE</span><p>Defined coverage ≠ unlimited capital.</p><small>Aggregate exposure and correlated-loss controls remain production work.</small></div>
+    </div>
+    <footer class="slide-footer"><p><a href="https://github.com/Repayd/repayd/blob/main/contracts/src/MutualPool.sol">MutualPool.payout / recordPremium</a> · <a href="https://github.com/Repayd/repayd/blob/main/contracts/src/VerdictContract.sol">VerdictContract.submitVerdict</a> · <a href="https://github.com/Repayd/repayd/blob/main/packages/pricing/src/index.ts">Prototype tariff</a></p><span class="slide-folio">16 / 16</span></footer>
+  </div>
+  <aside class="presenter-notes" id="notes-16" aria-label="Presenter notes for slide 16">
+    <h3>Q&amp;A · claims, premiums and liquidity</h3><p><strong>“Is every bad payment insured?” — 30-second answer:</strong> No. The demonstrated engine path requires external provenance and a defined policy breach after a settled loss. Owner-origin decisions are denied in the local example. The contract then validates the authorized message, current covered-claim policy, claimant, cap and outcome consistency; it does not independently prove the loss or recompute the full engine decision. The runner supplies actual receipt and balance verification before signing.</p><p><strong>“Who pays the premium, and is 2% annual?” — 30-second answer:</strong> The owner or platform would pay for coverage. The prototype rate is two percent of the cap per month before factors, not per year. At a 2,500 cap that is 50 monthly, then 45 with the SDK factor, then 135 after the illustrative first-claim factor. The quote is uncalibrated. recordPremium can collect an approved token transfer; we have not demonstrated end-to-end recurring authorization, automatic collection or continuous per-block debiting. API fees on Hedera are not that premium.</p><p><strong>“What happens if the pool runs dry?” — 30-second answer:</strong> The current payout consumes junior then senior capital. If capital is insufficient, it reverts; the enclosing verdict transaction does not finalize a paid claim. No partial payout queue, bailout or deployed reinsurance should be inferred. Coverage is conditional, not a solvency guarantee. Before production we must manage aggregate exposure, withdrawals and correlated losses, calibrate rates, obtain real backing and complete legal review.</p>
+  </aside>
+</section>
+
+</main>
+</div>
+<div class="pitch-controls screen-only">
+  <nav class="pitch-toolbar" aria-label="Presentation controls">
+    <div class="slide-navigation"><button id="pitch-prev" class="button pitch-icon-button" type="button" aria-label="Previous slide" title="Previous slide (Left arrow)" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="1.5"/></svg></button><output id="pitch-count" aria-label="Current slide">01 / 16</output><button id="pitch-next" class="button pitch-icon-button" type="button" aria-label="Next slide" title="Next slide (Right arrow)" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.5"/></svg></button></div>
+    <label class="pitch-jump" for="pitch-jump"><span>Jump to</span><select id="pitch-jump" aria-label="Jump to slide" disabled><option value="0">01 — Guarded autonomy</option></select></label>
+    <div class="pitch-tools"><button id="pitch-notes" class="button small" type="button" aria-pressed="false" aria-controls="pitch-deck" title="Toggle presenter notes (N)" disabled>Notes</button><button id="pitch-fullscreen" class="button small" type="button" aria-pressed="false" title="Toggle full screen (F)" disabled>Full screen</button><button id="pitch-print" class="button small" type="button" title="Print all slides (P)" disabled>Print / Save PDF</button><a id="pitch-pdf" class="button small" href="/downloads/repayd-pitch-deck.pdf" download="repayd-pitch-deck.pdf">Download PDF <span aria-hidden="true">↓</span></a></div>
+  </nav>
+  <progress id="pitch-progress" max="16" value="1" aria-label="Presentation progress">1 of 16 slides</progress>
+  <p id="pitch-status" class="pitch-help" role="status" aria-live="polite">Arrow keys navigate · N notes · F full screen · P print all slides</p>
+</div>
+<p id="pitch-announcer" class="sr-only screen-only" aria-live="polite" aria-atomic="true"></p>
+</body>
+</html>

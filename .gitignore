@@ -38,3 +38,6 @@ packages/subgraph/tests/.latest.json
 
 # agent/session artifacts (verification reports, deploy drivers)
 local/
+
+# local dashboard run journal (no keys)
+.repayd/

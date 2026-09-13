@@ -42,7 +42,7 @@ const server = Bun.serve({
     // ------------------ GET /v1/atlas/overview ------------------ //
     if (req.method === "GET" && path === "/v1/atlas/overview") {
       try {
-        const dep = await loadDeployment(5042002);
+        const dep = await loadDeployment(Number(process.env.DEPLOYMENT_CHAIN_ID ?? 5042002));
         const rpc = process.env["ARC_RPC_URL"] ?? "https://rpc.testnet.arc.io";
         const client = createPublicClient({ transport: http(rpc) });
         const ABI = parseAbi([
@@ -86,7 +86,7 @@ const server = Bun.serve({
     // ------------------ GET /v1/circle/agent-wallet ------------------ //
     if (req.method === "GET" && path === "/v1/circle/agent-wallet") {
       try {
-        const dep = await loadDeployment(5042002);
+        const dep = await loadDeployment(Number(process.env.DEPLOYMENT_CHAIN_ID ?? 5042002));
         const client = createPublicClient({
           transport: http(process.env["ARC_RPC_URL"] ?? "https://rpc.testnet.arc.io"),
         });

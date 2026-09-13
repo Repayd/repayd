@@ -1,97 +1,385 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>REPAYD — Capital Dashboard</title>
-<style>
-  :root { --bg:#0b0e14; --panel:#12161f; --line:#1f2633; --ink:#e8edf5; --dim:#8b95a7; --ok:#34d399; --warn:#fbbf24; --bad:#f87171; --brand:#5b8cff; }
-  * { box-sizing:border-box; margin:0; }
-  body { background:var(--bg); color:var(--ink); font:14px/1.5 ui-monospace,monospace; padding:24px; }
-  header { display:flex; align-items:baseline; gap:12px; margin-bottom:20px; }
-  h1 { font-size:18px; letter-spacing:.5px; }
-  h1 b { color:var(--brand); }
-  nav a { color:var(--dim); text-decoration:none; margin-right:14px; }
-  nav a.on { color:var(--ink); border-bottom:1px solid var(--brand); }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
-  .card h2 { font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
-  .row { display:flex; justify-content:space-between; padding:4px 0; }
-  .row .k { color:var(--dim); }
-  .stack { display:flex; gap:2px; height:26px; border-radius:6px; overflow:hidden; margin:10px 0; }
-  .stack .junior { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
-  .stack .senior { background:linear-gradient(90deg,#2563eb,#5b8cff); }
-  .legend { display:flex; gap:16px; font-size:12px; color:var(--dim); }
-  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
-  .feed { display:flex; flex-direction:column; gap:8px; }
-  .evt { border-left:2px solid var(--line); padding:6px 10px; }
-  .evt time { color:var(--dim); font-size:11px; display:block; }
-  table { width:100%; border-collapse:collapse; font-size:12.5px; }
-  th, td { text-align:right; padding:6px 8px; border-bottom:1px solid var(--line); }
-  th { color:var(--dim); font-weight:400; text-transform:uppercase; font-size:10.5px; letter-spacing:.5px; }
-  td:first-child, th:first-child { text-align:left; }
-  .pos { color:var(--ok); }
-  .neg { color:var(--bad); }
-  footer { margin-top:18px; color:var(--dim); font-size:11px; }
-</style>
-</head>
-<body>
-<header>
-  <h1><b>REPAYD</b> · Capital</h1>
-  <nav>
-    <a href="/">Owner</a>
-    <a class="on" href="/capital">Capital</a>
-    <a href="/record">Record</a>
-  </nav>
-</header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Selected-run pool tranches, recorded payout evidence, and separate platform API accounting. No fabricated yield or premium metrics."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Capital — REPAYD</title>
+    <script src="/assets/theme.js"></script>
+    <link rel="stylesheet" href="/assets/dashboard.css" />
+    <script type="module" src="/assets/surfaces.js"></script>
+  </head>
+  <body data-page="capital">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/" aria-label="REPAYD home"
+          ><svg
+            class="brand-mark"
+            viewBox="0 0 32 32"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 26V6h10a7 7 0 0 1 0 14h-5m5 0 8 6M2 26h8"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="square"
+            /></svg
+          ><span
+            ><span class="brand-word">REPAYD</span
+            ><span class="brand-caption"
+              >Autonomy, with accountability.</span
+            ></span
+          ></a
+        >
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a href="/">Home</a><a href="/owner" data-run-link="/owner">Owner</a
+          ><a href="/capital" data-run-link="/capital" aria-current="page"
+            >Capital</a
+          ><a href="/record" data-run-link="/record">Record</a
+          ><a href="/theater" data-run-link="/theater">Theater</a
+          ><a href="/flow" data-run-link="/flow">Flow</a>
+        </nav>
+        <div class="header-tools">
+          <span class="network">Arc testnet</span
+          ><button
+            class="theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-label="Switch theme"
+            aria-pressed="false"
+          >
+            <svg
+              class="theme-moon"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M20 15.4A8.5 8.5 0 0 1 8.6 4 8.5 8.5 0 1 0 20 15.4Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg
+            ><svg
+              class="theme-sun"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="4"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg
+            ><span data-theme-label>Theme</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <aside
+      id="active-run-banner"
+      class="active-run-banner"
+      aria-label="Active server run"
+      hidden
+    >
+      <div class="shell">
+        <p>
+          <span class="status-dot" aria-hidden="true"></span
+          ><strong id="active-run-label">A run is in progress</strong
+          ><span id="active-run-detail" data-active-detail
+            >Continues across navigation</span
+          >
+        </p>
+        <a id="active-run-link" href="/theater"
+          >Return to active run <span aria-hidden="true">→</span></a
+        >
+      </div>
+    </aside>
+    <main id="main" class="shell">
+      <noscript
+        ><p class="notice warning">
+          JavaScript is required to read saved runs and use dashboard controls.
+          Product information and navigation remain available.
+        </p></noscript
+      >
+      <div id="connection-error" class="notice error" role="alert" hidden>
+        <p id="connection-error-text"></p>
+        <div class="actions">
+          <button type="button" class="button small" data-retry-state>
+            Retry connection</button
+          ><button type="button" class="button small" data-follow-current>
+            Follow current run
+          </button>
+        </div>
+      </div>
+      <div id="action-message" class="notice" role="status" hidden></div>
 
-<div class="grid">
-  <section class="card" style="grid-column:1/-1">
-    <h2>The Mutual Pool — live actuarial table</h2>
-    <div class="stack">
-      <div class="junior" id="juniorBar" style="flex:19865"></div>
-      <div class="senior" id="seniorBar" style="flex:25000"></div>
-    </div>
-    <div class="legend">
-      <span><span class="dot" style="background:#fbbf24"></span>junior (first loss · higher yield)</span>
-      <span><span class="dot" style="background:#5b8cff"></span>senior (protected · paid first)</span>
-    </div>
-    <div class="row"><span class="k">capital available</span><span id="total">$44,865.00</span></div>
-    <div class="row"><span class="k">premiums in (30d)</span><span class="pos">+$312.40</span></div>
-    <div class="row"><span class="k">claims out (30d)</span><span class="neg">−$135.00</span></div>
-    <div class="row"><span class="k">reinsurance layer</span><span>cat-bond hook · $100,000 attachment (v2 — NextBlock)</span></div>
-  </section>
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">02 / Capital</p>
+          <h1>Capital, accounted for.</h1>
+          <p>
+            See what backs the selected run and what the pool actually paid.
+            Recorded balances and receipts—not projected yield or invented
+            premium history.
+          </p>
+        </div>
+        <p class="heading-aside">
+          Mintable test-token capital.<br />No deposits, investment returns, or
+          live coverage are offered here.
+        </p>
+      </div>
+      <section class="run-toolbar" aria-label="Run selection">
+        <div class="field">
+          <label for="run-history">Viewing run</label
+          ><select id="run-history" data-run-select disabled>
+            <option>Loading saved runs…</option>
+          </select>
+        </div>
+        <div class="run-context" data-run-context>Loading saved state…</div>
+        <div class="actions">
+          <a
+            class="button small quiet"
+            data-run-link="/flow"
+            data-requires-run
+            aria-disabled="true"
+            tabindex="-1"
+            >Inspect receipts ↗</a
+          ><button type="button" class="button small" data-retry-state>
+            Sync state
+          </button>
+        </div>
+      </section>
+      <div id="capital-no-run" class="notice" hidden>
+        Select a saved run or start one in Theater to inspect real pool
+        snapshots. No capital values are assumed before a verified read.
+      </div>
+      <section aria-labelledby="pool-title">
+        <div class="section-head">
+          <div>
+            <p class="section-label">MutualPool / selected run</p>
+            <h2 id="pool-title">The first-loss ledger</h2>
+          </div>
+          <span class="pill" data-environment-token>Demo USDC (mintable)</span>
+        </div>
+        <dl id="capital-balances" class="balance-strip">
+          <div>
+            <dt>Recorded pool capital</dt>
+            <dd>—<small>Demo USDC</small></dd>
+          </div>
+          <div>
+            <dt>Junior · first loss</dt>
+            <dd>—<small>Demo USDC</small></dd>
+          </div>
+          <div>
+            <dt>Senior</dt>
+            <dd>—<small>Demo USDC</small></dd>
+          </div>
+          <div>
+            <dt>Recorded payouts</dt>
+            <dd>—<small>Demo USDC</small></dd>
+          </div>
+        </dl>
+        <p id="capital-snapshot-note" class="snapshot-note">
+          Waiting for a verified pool snapshot.
+        </p>
+      </section>
+      <div class="two-column section">
+        <section class="surface" aria-labelledby="allocation-title">
+          <div class="section-head">
+            <h2 id="allocation-title">Capital allocation</h2>
+            <span class="section-label">Recorded, not forecast</span>
+          </div>
+          <div
+            id="pool-allocation"
+            class="pool-band"
+            role="img"
+            aria-label="Pool allocation awaits a snapshot"
+            hidden
+          >
+            <div class="pool-bar" aria-hidden="true">
+              <span id="junior-bar" class="junior"></span
+              ><span id="senior-bar" class="senior"></span>
+            </div>
+            <div class="pool-legend">
+              <span
+                ><i class="swatch rust" aria-hidden="true"></i>Junior · first
+                loss</span
+              ><span><i class="swatch" aria-hidden="true"></i>Senior</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption class="sr-only">
+                Recorded tranche capital in Demo USDC and its share of the total
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Tranche</th>
+                  <th scope="col">Position</th>
+                  <th scope="col" class="numeric">Demo USDC</th>
+                  <th scope="col" class="numeric">Share</th>
+                </tr>
+              </thead>
+              <tbody id="tranche-rows">
+                <tr>
+                  <th scope="row">Junior</th>
+                  <td>First loss</td>
+                  <td class="numeric">—</td>
+                  <td class="numeric">—</td>
+                </tr>
+                <tr>
+                  <th scope="row">Senior</th>
+                  <td>After junior</td>
+                  <td class="numeric">—</td>
+                  <td class="numeric">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="trust-note">
+            Shares are calculated from the recorded pool snapshot. A covered
+            payout is shown only when the runner records it; it is not inferred
+            from a preset starting balance.
+          </p>
+        </section>
+        <section aria-labelledby="pool-contracts-title">
+          <div class="section-head">
+            <h2 id="pool-contracts-title">The contracts behind it</h2>
+          </div>
+          <dl id="capital-contracts" class="ledger">
+            <div>
+              <dt>Deployment</dt>
+              <dd>Loading saved contracts…</dd>
+            </div>
+          </dl>
+          <details class="disclosure">
+            <summary>
+              What a payout establishes<span class="chevron" aria-hidden="true"
+                >›</span
+              >
+            </summary>
+            <div class="disclosure-body">
+              The covered verdict calls the pool and transfers demo tokens to
+              the policy owner. The receipt is evidence of that payout. It is
+              not evidence of recurring premiums, a future yield, or a deployed
+              reinsurance layer.
+            </div>
+          </details>
+          <details class="disclosure">
+            <summary>
+              Where this demonstration stops<span
+                class="chevron"
+                aria-hidden="true"
+                >›</span
+              >
+            </summary>
+            <div class="disclosure-body">
+              The watcher is a local signer, attack facts are constructed, and
+              the capital is a mintable token on Arc testnet. No historical
+              actuarial track record or live insurance offering is represented.
+            </div>
+          </details>
+        </section>
+      </div>
+      <section class="section" aria-labelledby="capital-events-title">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Recovery &amp; provenance</p>
+            <h2 id="capital-events-title">Coverage evidence</h2>
+          </div>
+          <span id="payout-count" class="pill">Awaiting evidence</span>
+        </div>
+        <div id="capital-events" class="evidence-list">
+          <div class="loading-state">
+            Restoring covered-loss and denial evidence…
+          </div>
+        </div>
+      </section>
+      <section class="section surface" aria-labelledby="platform-title">
+        <div class="section-head">
+          <div>
+            <p class="section-label">Independent API integration</p>
+            <h2 id="platform-title">Platform accounting lookup</h2>
+          </div>
+          <span id="platform-status"
+            ><span class="pill">Not requested</span></span
+          >
+        </div>
+        <p class="fine-print">
+          Query the existing platform API by slug. Its accounting values are
+          separate from this selected run and are not presented as on-chain
+          premium evidence.
+        </p>
+        <form id="platform-form" class="inline-form">
+          <div class="field">
+            <label for="platform-name">Registered platform slug</label
+            ><input
+              id="platform-name"
+              name="platform"
+              required
+              pattern="[a-z0-9-]+"
+              placeholder="Enter a registered platform slug"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+          <button id="platform-submit" type="submit" class="button">
+            Look up platform <span aria-hidden="true">→</span>
+          </button>
+        </form>
+        <div
+          id="platform-error"
+          class="notice warning"
+          role="status"
+          hidden
+        ></div>
+        <div id="platform-result" class="api-result"></div>
+      </section>
 
-  <section class="card">
-    <h2>Tranches</h2>
-    <table>
-      <tr><th>tranche</th><th>capital</th><th>30d yield</th><th>share</th></tr>
-      <tr><td>junior</td><td>$19,865</td><td class="pos">+1.52%</td><td>44.3%</td></tr>
-      <tr><td>senior</td><td>$25,000</td><td class="pos">+0.41%</td><td>55.7%</td></tr>
-    </table>
-    <div class="row" style="margin-top:8px"><span class="k">LPs</span><span>2 · deposits open</span></div>
-    <div class="row"><span class="k">risk class</span><span>machine telematics (uncorrelated)</span></div>
-  </section>
-
-  <section class="card">
-    <h2>Coverage in force</h2>
-    <div class="row"><span class="k">agents</span><span>3 · Atlas, Vex, Trux</span></div>
-    <div class="row"><span class="k">aggregate cap</span><span>$6,200</span></div>
-    <div class="row"><span class="k">utilization</span><span>13.8% of junior</span></div>
-    <div class="row"><span class="k">watch-only agents</span><span>1 (×2 load)</span></div>
-    <div class="row"><span class="k">solvency</span><span class="pos">payouts ≤ capital invariant holds</span></div>
-  </section>
-
-  <section class="card" style="grid-column:1/-1">
-    <h2>Claims feed</h2>
-    <div class="feed">
-      <div class="evt"><time>block 262 · same block as verdict</time>COVERED · atlas.repayd.eth · $135.00 · alibi EXTERNAL · junior absorbed</div>
-      <div class="evt"><time>block 259</time>DENIED_OWNER_ORIGIN · vex.repayd.eth · $0.00 · owner-signed instruction — scar recorded</div>
-      <div class="evt"><time>block 256</time>ATTEMPTED_BREACH · atlas.repayd.eth · $0.00 · frozen in hold window · pricing +0.15×/30d</div>
-    </div>
-  </section>
-</div>
-
-<footer>REPAYD capital — anyone with USDC earning yield on priced, capped, telematic machine risk · waterfall: junior → senior → reinsurance</footer>
-</body>
+      <div
+        id="connection-status"
+        class="connection-line"
+        data-connection="offline"
+      >
+        <span
+          ><i class="status-dot" aria-hidden="true"></i
+          ><span id="connection-label">Connecting to saved state</span></span
+        ><span id="connection-age">Waiting for server</span>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <p>
+          <strong>REPAYD</strong> A testnet demonstration, not a real-money
+          insurance product.
+        </p>
+        <div class="footer-links">
+          <span>Arc · 5042002</span
+          ><a
+            href="https://testnet.arcscan.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Arc explorer ↗<span class="sr-only">
+              (opens in a new tab)</span
+            ></a
+          ><a href="/record" data-run-link="/record"
+            >Evidence &amp; provenance</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
 </html>

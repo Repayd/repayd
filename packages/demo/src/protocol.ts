@@ -24,19 +24,37 @@ import {
   type Address,
   type GetContractReturnType,
   type Abi,
+  type Hash,
+  type TransactionReceipt,
+  type PublicActions,
+  type Transport,
 } from "viem";
 import { anvil } from "viem/chains";
 import { privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
 import { secp256k1 } from "@noble/curves/secp256k1";
-import POLICY_REGISTRY from "../../../contracts/out/PolicyRegistry.sol/PolicyRegistry.json";
-import GUARD_ACCOUNT from "../../../contracts/out/GuardAccount.sol/GuardAccount.json";
-import VERDICT_CONTRACT from "../../../contracts/out/VerdictContract.sol/VerdictContract.json";
-import MUTUAL_POOL from "../../../contracts/out/MutualPool.sol/MutualPool.json";
-import BLOCKLIST from "../../../contracts/out/Blocklist.sol/Blocklist.json";
-import USDC_MOCK from "../../../contracts/out/USDCMock.sol/USDCMock.json";
+import POLICY_REGISTRY_ARTIFACT from "../../../contracts/out/PolicyRegistry.sol/PolicyRegistry.json";
+import GUARD_ACCOUNT_ARTIFACT from "../../../contracts/out/GuardAccount.sol/GuardAccount.json";
+import VERDICT_CONTRACT_ARTIFACT from "../../../contracts/out/VerdictContract.sol/VerdictContract.json";
+import MUTUAL_POOL_ARTIFACT from "../../../contracts/out/MutualPool.sol/MutualPool.json";
+import BLOCKLIST_ARTIFACT from "../../../contracts/out/Blocklist.sol/Blocklist.json";
+import USDC_MOCK_ARTIFACT from "../../../contracts/out/USDCMock.sol/USDCMock.json";
 import type { Policy } from "@repayd/engine";
 import { toOnChainPolicy } from "@repayd/engine";
 import type { DeploymentRecord } from "@repayd/api/src/deployment.ts";
+import { publishTransaction } from "./bus.ts";
+import type { RunPhase } from "./run-types.ts";
+
+/** Forge JSON widens ABI discriminator strings; normalize once at import. */
+interface ProtocolArtifact {
+  readonly abi: Abi;
+  readonly bytecode: { readonly object: string };
+}
+const POLICY_REGISTRY = POLICY_REGISTRY_ARTIFACT as ProtocolArtifact;
+export const GUARD_ACCOUNT = GUARD_ACCOUNT_ARTIFACT as ProtocolArtifact;
+export const VERDICT_CONTRACT = VERDICT_CONTRACT_ARTIFACT as ProtocolArtifact;
+export const MUTUAL_POOL = MUTUAL_POOL_ARTIFACT as ProtocolArtifact;
+const BLOCKLIST = BLOCKLIST_ARTIFACT as ProtocolArtifact;
+const USDC_MOCK = USDC_MOCK_ARTIFACT as ProtocolArtifact;
 
 export const ALICE = "0x328809bc894f92807417d2dad6b7c998c1afdac6";
 export const BOB = "0x1d96f2f6bef1202e4ce1ff6dad0c2cb002861d3e";
@@ -47,7 +65,10 @@ export const CAROL = "0xa4d4c1f8a763ef6a0140d04291eceef913ffc272";
  * the first two hex chars to the end so nothing is hardcoded and it can
  * never collide with the allowlist entries.
  */
-export const FRESH_WALLET = (`0x${ALICE.slice(4)}${ALICE.slice(2, 4)}`) as `0x${string}`;
+export const FRESH_WALLET = `0x${ALICE.slice(4)}${ALICE.slice(
+  2,
+  4,
+)}` as `0x${string}`;
 export const ATTACKER = "0x9f2c8a11b6c4d3e5f7a8b9c0d1e2f3a4b5c6d7e8";
 
 /** Resolve a REQUIRED actor key from the environment; names the var, no fallback. */
@@ -58,6 +79,8 @@ export function requiredKey(name: string): `0x${string}` {
       `missing env var ${name} — export the demo actor's private key (0x + 64 hex) before running`,
     );
   }
+  if (!/^0x[0-9a-fA-F]{64}$/.test(v))
+    throw new Error(`invalid env var ${name}: expected 0x + 64 hex characters`);
   return v as `0x${string}`;
 }
 
@@ -73,13 +96,31 @@ export function amaraAccount(): PrivateKeyAccount {
   return privateKeyToAccount(requiredKey("AMARA_PRIVATE_KEY"));
 }
 
-const MAX_UINT256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn;
+const MAX_UINT256 =
+  0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn;
 
 /** A wallet client that can also read. */
-export type ReadWriteClient = WalletClient & ReturnType<typeof publicActions>;
+export type ReadWriteClient = WalletClient<
+  Transport,
+  typeof anvil,
+  PrivateKeyAccount,
+  undefined,
+  undefined
+> &
+  PublicActions<Transport, typeof anvil, PrivateKeyAccount, undefined>;
 
 /** Typed contract handle from viem's getContract. */
-export type Contract<TAbi extends Abi> = GetContractReturnType<TAbi, PublicClient, WalletClient>;
+export type Contract<TAbi extends Abi> = GetContractReturnType<
+  TAbi,
+  { public: PublicClient; wallet: ReadWriteClient }
+>;
+
+export interface ProtocolClients {
+  readonly public: PublicClient;
+  readonly amara: ReadWriteClient;
+  readonly agent: ReadWriteClient;
+  readonly watcher: ReadWriteClient;
+}
 
 export interface Protocol {
   readonly usdc: Contract<typeof USDC_MOCK.abi>;
@@ -110,7 +151,9 @@ export interface DeployAccounts {
 export function rpcUrl(): string {
   const v = process.env.DEMO_RPC_URL;
   if (!v) {
-    throw new Error("missing env var DEMO_RPC_URL — export the RPC endpoint before running");
+    throw new Error(
+      "missing env var DEMO_RPC_URL — export the RPC endpoint before running",
+    );
   }
   return v;
 }
@@ -119,11 +162,18 @@ export const DEMO_CHAIN_ID = Number(
 );
 
 /** viem clients shared by the demo, bound to DEMO_CHAIN_ID's chain. */
-export function clients(): { public: PublicClient; amara: ReadWriteClient; agent: ReadWriteClient; watcher: ReadWriteClient } {
+export function clients(): ProtocolClients {
   const chain = { ...anvil, id: DEMO_CHAIN_ID } as typeof anvil;
-  const pub = createPublicClient({ chain, transport: http(rpcUrl()) });
+  const pub = createPublicClient({
+    chain,
+    transport: http(rpcUrl(), { retryCount: 0, timeout: 30_000 }),
+  });
   const rw = (account: PrivateKeyAccount): ReadWriteClient =>
-    createWalletClient({ account, chain, transport: http(rpcUrl()) }).extend(publicActions);
+    createWalletClient({
+      account,
+      chain,
+      transport: http(rpcUrl(), { retryCount: 0, timeout: 30_000 }),
+    }).extend(publicActions);
   return {
     public: pub,
     amara: rw(amaraAccount()),
@@ -134,51 +184,97 @@ export function clients(): { public: PublicClient; amara: ReadWriteClient; agent
 
 /** Deploy the full protocol, wire it, seed the pool, attach Atlas's policy. */
 export async function deployProtocol(
-  c: ReturnType<typeof clients>,
+  c: ProtocolClients,
   accounts: DeployAccounts,
 ): Promise<Protocol> {
   const deployer = c.amara;
   const amaraAddr = accounts.amara.address;
 
   // --- Deploy (bytecode lives in the forge artifacts). ---
-  const usdcAddr = await deployContract(deployer, USDC_MOCK.abi, USDC_MOCK.bytecode.object, []);
-  const registryAddr = await deployContract(deployer, POLICY_REGISTRY.abi, POLICY_REGISTRY.bytecode.object, []);
-  const blocklistAddr = await deployContract(deployer, BLOCKLIST.abi, BLOCKLIST.bytecode.object, []);
+  const usdcAddr = await deployContract(
+    deployer,
+    USDC_MOCK.abi,
+    USDC_MOCK.bytecode.object,
+    [],
+  );
+  const registryAddr = await deployContract(
+    deployer,
+    POLICY_REGISTRY.abi,
+    POLICY_REGISTRY.bytecode.object,
+    [],
+  );
+  const blocklistAddr = await deployContract(
+    deployer,
+    BLOCKLIST.abi,
+    BLOCKLIST.bytecode.object,
+    [],
+  );
   const verdictsAddr = await deployContract(
     deployer,
     VERDICT_CONTRACT.abi,
     VERDICT_CONTRACT.bytecode.object,
     [registryAddr, blocklistAddr],
   );
-  const poolAddr = await deployContract(deployer, MUTUAL_POOL.abi, MUTUAL_POOL.bytecode.object, [
-    usdcAddr,
-    amaraAddr,
-  ]);
-  const guardAddr = await deployContract(deployer, GUARD_ACCOUNT.abi, GUARD_ACCOUNT.bytecode.object, [
-    amaraAddr,
-    agentKeyAccount().address,
-    registryAddr,
-    blocklistAddr,
-    usdcAddr,
-  ]);
+  const poolAddr = await deployContract(
+    deployer,
+    MUTUAL_POOL.abi,
+    MUTUAL_POOL.bytecode.object,
+    [usdcAddr, amaraAddr],
+  );
+  const guardAddr = await deployContract(
+    deployer,
+    GUARD_ACCOUNT.abi,
+    GUARD_ACCOUNT.bytecode.object,
+    [
+      amaraAddr,
+      agentKeyAccount().address,
+      registryAddr,
+      blocklistAddr,
+      usdcAddr,
+    ],
+  );
 
   // --- Wire. ---
-  await tx(deployer, verdictsAddr, VERDICT_CONTRACT.abi, "setWatcher", [watcherAccount().address]);
+  await tx(deployer, verdictsAddr, VERDICT_CONTRACT.abi, "setWatcher", [
+    watcherAccount().address,
+  ]);
   await tx(deployer, verdictsAddr, VERDICT_CONTRACT.abi, "setPool", [poolAddr]);
-  await tx(deployer, poolAddr, MUTUAL_POOL.abi, "setVerdictContract", [verdictsAddr]);
-  await tx(deployer, blocklistAddr, BLOCKLIST.abi, "setReporter", [verdictsAddr, true]);
-  await tx(deployer, guardAddr, GUARD_ACCOUNT.abi, "setVerdictContract", [verdictsAddr]);
+  await tx(deployer, poolAddr, MUTUAL_POOL.abi, "setVerdictContract", [
+    verdictsAddr,
+  ]);
+  await tx(deployer, blocklistAddr, BLOCKLIST.abi, "setReporter", [
+    verdictsAddr,
+    true,
+  ]);
+  await tx(deployer, guardAddr, GUARD_ACCOUNT.abi, "setVerdictContract", [
+    verdictsAddr,
+  ]);
 
   // --- Fund. ---
-  await tx(deployer, usdcAddr, USDC_MOCK.abi, "mint", [guardAddr, parseUnits("4000", 6)]);
-  await tx(deployer, usdcAddr, USDC_MOCK.abi, "mint", [accounts.ravi.address, parseUnits("20000", 6)]);
-  await tx(deployer, usdcAddr, USDC_MOCK.abi, "mint", [accounts.senior.address, parseUnits("25000", 6)]);
+  await tx(deployer, usdcAddr, USDC_MOCK.abi, "mint", [
+    guardAddr,
+    parseUnits("4000", 6),
+  ]);
+  await tx(deployer, usdcAddr, USDC_MOCK.abi, "mint", [
+    accounts.ravi.address,
+    parseUnits("20000", 6),
+  ]);
+  await tx(deployer, usdcAddr, USDC_MOCK.abi, "mint", [
+    accounts.senior.address,
+    parseUnits("25000", 6),
+  ]);
   const ravi = asRw(accounts.ravi);
   const senior = asRw(accounts.senior);
   await tx(ravi, usdcAddr, USDC_MOCK.abi, "approve", [poolAddr, MAX_UINT256]);
-  await tx(ravi, poolAddr, MUTUAL_POOL.abi, "deposit", [1, parseUnits("20000", 6)]);
+  await tx(ravi, poolAddr, MUTUAL_POOL.abi, "deposit", [
+    1,
+    parseUnits("20000", 6),
+  ]);
   await tx(senior, usdcAddr, USDC_MOCK.abi, "approve", [poolAddr, MAX_UINT256]);
-  await tx(senior, poolAddr, MUTUAL_POOL.abi, "deposit", [0, parseUnits("25000", 6)]);
+  await tx(senior, poolAddr, MUTUAL_POOL.abi, "deposit", [
+    0,
+    parseUnits("25000", 6),
+  ]);
 
   // --- Attach policy v1 (single source: the engine-typed Policy, converted
   //     to the on-chain shape by toOnChainPolicy — no hand-duplicated
@@ -201,11 +297,21 @@ export async function deployProtocol(
     holdWindowSec: 120,
     sdkInstalled: true,
   };
-  await tx(deployer, registryAddr, POLICY_REGISTRY.abi, "attach", [guardAddr, toOnChainPolicy(policy)]);
+  await tx(deployer, registryAddr, POLICY_REGISTRY.abi, "attach", [
+    guardAddr,
+    toOnChainPolicy(policy),
+  ]);
 
   // --- Contract handles. ---
-  const handle = <TAbi extends Abi>(address: Address, abi: TAbi): Contract<TAbi> =>
-    getContract({ address, abi, client: { public: c.public, wallet: c.amara } }) as Contract<TAbi>;
+  const handle = <TAbi extends Abi>(
+    address: Address,
+    abi: TAbi,
+  ): Contract<TAbi> =>
+    getContract({
+      address,
+      abi,
+      client: { public: c.public, wallet: c.amara },
+    });
 
   return {
     usdc: handle(usdcAddr, USDC_MOCK.abi),
@@ -224,19 +330,20 @@ export async function deployProtocol(
  * Policy form — so attach and fresh-deploy produce identical demo inputs.
  */
 export async function attachProtocol(
-  c: ReturnType<typeof clients>,
+  c: ProtocolClients,
   record: DeploymentRecord,
 ): Promise<Protocol> {
   const a = record.contracts;
-  // viem's ABI inference degenerates on forge artifacts under this tsconfig
-  // (pre-existing — see deployProtocol); route handles through `unknown`.
-  const handle = (address: Address, abi: unknown): unknown =>
-    getContract({ address, abi: abi as Abi, client: { public: c.public, wallet: c.amara } });
-  const registry = handle(a.policyRegistry as Address, POLICY_REGISTRY.abi) as Protocol["registry"];
-  const guard = handle(a.guardAccount as Address, GUARD_ACCOUNT.abi) as Protocol["guard"];
+  const handle = (address: Address, abi: Abi): Contract<Abi> =>
+    getContract({
+      address,
+      abi,
+      client: { public: c.public, wallet: c.amara },
+    });
+  const registry = handle(a.policyRegistry, POLICY_REGISTRY.abi);
+  const guard = handle(a.guardAccount, GUARD_ACCOUNT.abi);
 
-  // viem's inference over forge artifact ABIs degenerates under this tsconfig
-  // (pre-existing; see deployProtocol) — pin the on-chain struct shape here.
+  // The artifact ABI is dynamic; describe the policy tuple at its read boundary.
   type RawPolicy = {
     version: bigint;
     agent: Address;
@@ -252,14 +359,16 @@ export async function attachProtocol(
     holdWindowSec: bigint;
     sdkInstalled: boolean;
   };
-  const version = (await registry.read.latestVersion!([a.guardAccount as Address]))!;
+  const version = (await registry.read.latestVersion!([
+    a.guardAccount as Address,
+  ]))!;
   if (version === 0n) {
     throw new Error(
       `no policy attached to guard ${a.guardAccount} on chain ${record.chainId} — ` +
         `rerun: cd contracts && forge script script/Deploy.s.sol --rpc-url <rpc> --broadcast`,
     );
   }
-  const p = (await registry.read.getPolicy!([a.guardAccount as Address]))! as unknown as RawPolicy;
+  const p = (await registry.read.getPolicy!([a.guardAccount])) as RawPolicy;
   const policy: Policy = {
     version: Number(p.version),
     agent: p.agent,
@@ -276,12 +385,12 @@ export async function attachProtocol(
     sdkInstalled: p.sdkInstalled,
   };
   return {
-    usdc: handle(a.usdc as Address, USDC_MOCK.abi) as Protocol["usdc"],
+    usdc: handle(a.usdc, USDC_MOCK.abi),
     registry,
     guard,
-    verdicts: handle(a.verdicts as Address, VERDICT_CONTRACT.abi) as Protocol["verdicts"],
-    pool: handle(a.mutualPool as Address, MUTUAL_POOL.abi) as Protocol["pool"],
-    blocklist: handle(a.blocklist as Address, BLOCKLIST.abi) as Protocol["blocklist"],
+    verdicts: handle(a.verdicts, VERDICT_CONTRACT.abi),
+    pool: handle(a.mutualPool, MUTUAL_POOL.abi),
+    blocklist: handle(a.blocklist, BLOCKLIST.abi),
     policy,
   };
 }
@@ -289,15 +398,22 @@ export async function attachProtocol(
 /** Submit a signed COVERED verdict; the pool pays the claimant same tx. */
 export async function submitCoveredVerdict(
   p: Protocol,
-  c: ReturnType<typeof clients>,
+  c: ProtocolClients,
   claim: { txHash: string; destination: string; loss: bigint; payout: bigint },
-): Promise<void> {
+): Promise<TransactionReceipt> {
   // EIP-712 domain-bound digest: the watcher signs the typed digest for THIS
   // VerdictContract deployment (chainid + address). Mirrors
   // VerdictContract.verdictDigest712 exactly.
-  const policyHash = await p.registry.read.policyHashAt([p.policy.agent, 1]);
+  const policyHash = (await p.registry.read.policyHashAt!([
+    p.policy.agent,
+    p.policy.version,
+  ])) as Hash;
   const timestamp = (await c.public.getBlock()).timestamp; // chain clock: freshness window is chain-relative
-  const reasons: Array<{ tag: `0x${string}`; provenance: number; detail: string }> = [];
+  const reasons: Array<{
+    tag: `0x${string}`;
+    provenance: number;
+    detail: string;
+  }> = [];
   const digest = verdictDigest712(p.verdicts.address, {
     policyHash,
     agent: p.policy.agent,
@@ -339,24 +455,37 @@ export async function submitCoveredVerdict(
     chain: { ...anvil, id: DEMO_CHAIN_ID } as typeof anvil,
     account: watcher,
   });
-  const receipt = await c.public.waitForTransactionReceipt({ hash });
-  if (receipt.status !== "success") throw new Error("submitVerdict failed");
+  return confirmedReceipt(
+    c.public,
+    hash,
+    "Covered verdict and pool payout",
+    "recovery",
+  );
 }
 
 /** Submit a signed hold verdict (clean=0 / suspicious=1) via VerdictContract. */
 export async function submitHoldVerdict(
   p: Protocol,
-  c: ReturnType<typeof clients>,
+  c: ProtocolClients,
   holdId: bigint,
   tier: 0 | 1,
-): Promise<void> {
-  const policyHash = await p.registry.read.policyHashAt([p.policy.agent, 1]);
+): Promise<TransactionReceipt> {
+  const policyHash = (await p.registry.read.policyHashAt!([
+    p.policy.agent,
+    p.policy.version,
+  ])) as Hash;
   // EIP-712 over this deployment's domain (mirrors holdVerdictDigest712).
-  const digest = holdVerdictDigest712(p.verdicts.address, holdId, p.policy.agent, policyHash, tier);
+  const digest = holdVerdictDigest712(
+    p.verdicts.address,
+    holdId,
+    p.policy.agent,
+    policyHash,
+    tier,
+  );
   // Raw ECDSA over the typed digest (matches ecrecover on-chain).
   const watcher = watcherAccount();
   const signature = signRawDigest(digest, requiredKey("WATCHER_PRIVATE_KEY"));
-  await c.watcher.writeContract({
+  const hash = await c.watcher.writeContract({
     address: p.verdicts.address,
     abi: VERDICT_CONTRACT.abi,
     functionName: "submitHoldVerdict",
@@ -364,6 +493,14 @@ export async function submitHoldVerdict(
     chain: { ...anvil, id: DEMO_CHAIN_ID } as typeof anvil,
     account: watcher,
   });
+  return confirmedReceipt(
+    c.public,
+    hash,
+    tier === 0
+      ? "Controlled watcher clean release"
+      : "Watcher suspicious hold freeze",
+    tier === 0 ? "recovery" : "containment",
+  );
 }
 
 // ------------------------------------------------------------------ //
@@ -382,7 +519,10 @@ export async function submitHoldVerdict(
  * on-chain DOMAIN_SEPARATOR embeds block.chainid, and a mismatched domain
  * makes every signature fail on-chain ecrecover (H2 replay protection).
  */
-export function domainSeparator(verifyingContract: `0x${string}`, chainId: bigint): `0x${string}` {
+export function domainSeparator(
+  verifyingContract: `0x${string}`,
+  chainId: bigint,
+): `0x${string}` {
   return keccak256(
     encodeAbiParameters(
       [
@@ -429,12 +569,18 @@ export function verdictDigest712(
     payoutAmount: bigint;
     alibi: number;
     outcome: number;
-    reasons: ReadonlyArray<{ tag: `0x${string}`; provenance: number; detail: string }>;
+    reasons: ReadonlyArray<{
+      tag: `0x${string}`;
+      provenance: number;
+      detail: string;
+    }>;
     timestamp: bigint;
   },
   chainId: bigint = BigInt(DEMO_CHAIN_ID),
 ): `0x${string}` {
-  const reasonTypeHash = keccak256(toBytes("Reason(bytes4 tag,uint8 provenance,string detail)"));
+  const reasonTypeHash = keccak256(
+    toBytes("Reason(bytes4 tag,uint8 provenance,string detail)"),
+  );
   const verdictTypeHash = keccak256(
     toBytes(
       "Verdict(bytes32 policyHash,address agent,address claimant,bytes32 txHash,address destination,uint96 lossAmount,uint96 payoutAmount,uint8 alibi,uint8 outcome,Reason[] reasons,uint64 timestamp)Reason(bytes4 tag,uint8 provenance,string detail)",
@@ -448,7 +594,7 @@ export function verdictDigest712(
           { name: "provenance", type: "uint8" },
           { name: "detail", type: "string" },
         ],
-        [r.tag, BigInt(r.provenance), r.detail],
+        [r.tag, r.provenance, r.detail],
       ),
     ),
   );
@@ -477,8 +623,8 @@ export function verdictDigest712(
         v.destination,
         v.lossAmount,
         v.payoutAmount,
-        BigInt(v.alibi),
-        BigInt(v.outcome),
+        v.alibi,
+        v.outcome,
         keccak256(concatHexBytes(reasonHashes)),
         v.timestamp,
       ],
@@ -502,7 +648,11 @@ function holdVerdictDigest712(
   tier: number,
   chainId: bigint = BigInt(DEMO_CHAIN_ID),
 ): `0x${string}` {
-  const typeHash = keccak256(toBytes("HoldVerdict(uint256 holdId,address agent,bytes32 policyHash,uint8 tier)"));
+  const typeHash = keccak256(
+    toBytes(
+      "HoldVerdict(uint256 holdId,address agent,bytes32 policyHash,uint8 tier)",
+    ),
+  );
   const structHash = keccak256(
     encodeAbiParameters(
       [
@@ -512,11 +662,15 @@ function holdVerdictDigest712(
         { name: "policyHash", type: "bytes32" },
         { name: "tier", type: "uint8" },
       ],
-      [typeHash, holdId, agent, policyHash, BigInt(tier)],
+      [typeHash, holdId, agent, policyHash, tier],
     ),
   );
   return keccak256(
-    concatHexBytes(["0x1901", domainSeparator(verifyingContract, chainId), structHash]),
+    concatHexBytes([
+      "0x1901",
+      domainSeparator(verifyingContract, chainId),
+      structHash,
+    ]),
   );
 }
 
@@ -525,7 +679,11 @@ function concatHexBytes(parts: ReadonlyArray<`0x${string}`>): `0x${string}` {
 }
 function asRw(account: PrivateKeyAccount): ReadWriteClient {
   const chain = { ...anvil, id: DEMO_CHAIN_ID } as typeof anvil;
-  return createWalletClient({ account, chain, transport: http() }).extend(publicActions);
+  return createWalletClient({
+    account,
+    chain,
+    transport: http(rpcUrl(), { retryCount: 0, timeout: 30_000 }),
+  }).extend(publicActions);
 }
 async function deployContract(
   client: ReadWriteClient,
@@ -541,8 +699,14 @@ async function deployContract(
     account: client.account,
     chain,
   });
-  const receipt = await client.waitForTransactionReceipt({ hash });
-  if (!receipt.contractAddress) throw new Error("deploy failed: no contract address");
+  const receipt = await confirmedReceipt(
+    client,
+    hash,
+    "Deploy protocol contract",
+    "deploying",
+  );
+  if (!receipt.contractAddress)
+    throw new Error("deploy failed: no contract address");
   return receipt.contractAddress;
 }
 async function tx(
@@ -551,7 +715,7 @@ async function tx(
   abi: Abi,
   functionName: string,
   args: readonly unknown[],
-): Promise<void> {
+): Promise<TransactionReceipt> {
   const chain = { ...anvil, id: DEMO_CHAIN_ID } as typeof anvil;
   const hash = await client.writeContract({
     address,
@@ -561,7 +725,40 @@ async function tx(
     account: client.account,
     chain,
   });
-  await client.waitForTransactionReceipt({ hash });
+  return confirmedReceipt(
+    client,
+    hash,
+    `${functionName} · ${address}`,
+    "deploying",
+  );
+}
+
+/** Record the exact mined receipt before rejecting an unexpected status. */
+export async function confirmedReceipt(
+  client: Pick<PublicClient, "waitForTransactionReceipt" | "getBlock">,
+  hash: Hash,
+  label: string,
+  phase: RunPhase,
+  expectedStatus: "success" | "reverted" = "success",
+): Promise<TransactionReceipt> {
+  const receipt = await client.waitForTransactionReceipt({
+    hash,
+    timeout: 120_000,
+  });
+  const block = await client.getBlock({ blockNumber: receipt.blockNumber });
+  publishTransaction({
+    hash: receipt.transactionHash,
+    label,
+    phase,
+    blockNumber: Number(receipt.blockNumber),
+    timestamp: Number(block.timestamp),
+    status: receipt.status,
+  });
+  if (receipt.status !== expectedStatus)
+    throw new Error(
+      `${label}: expected ${expectedStatus}, receipt is ${receipt.status} (${hash})`,
+    );
+  return receipt;
 }
 
 /**
@@ -569,8 +766,13 @@ async function tx(
  * Matches the on-chain `_recoverSigner`, which calls ecrecover directly on
  * the EIP-712 typed digest (no EIP-191 "Ethereum Signed Message" prefix).
  */
-export function signRawDigest(digest: `0x${string}`, privateKey: `0x${string}`): `0x${string}` {
+export function signRawDigest(
+  digest: `0x${string}`,
+  privateKey: `0x${string}`,
+): `0x${string}` {
   const sig = secp256k1.sign(toBytes(digest), toBytes(privateKey));
   const v = sig.recovery + 27;
-  return `0x${sig.r.toString(16).padStart(64, "0")}${sig.s.toString(16).padStart(64, "0")}${v.toString(16).padStart(2, "0")}` as `0x${string}`;
+  return `0x${sig.r.toString(16).padStart(64, "0")}${sig.s
+    .toString(16)
+    .padStart(64, "0")}${v.toString(16).padStart(2, "0")}` as `0x${string}`;
 }

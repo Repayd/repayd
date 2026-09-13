@@ -9,7 +9,7 @@
   "scripts": {
     "test": "bun run test:contracts && bun run test:js",
     "test:contracts": "cd contracts && forge test",
-    "test:js": "cd packages/engine && bunx vitest run && cd ../sdk && bunx vitest run && cd ../api && bun test && cd ../demo && bunx vitest run && cd ../pricing && bun test && cd ../record && bun test && cd ../hedera && bun test",
+    "test:js": "cd packages/engine && bunx vitest run && cd ../sdk && bunx vitest run && cd ../api && bun test && cd ../demo && bunx vitest run && cd ../pricing && bun test && cd ../record && bun test && cd ../hedera && bun test && cd ../dashboard && bun test",
     "lint": "for p in engine sdk api record pricing hedera; do (cd packages/$p && bunx tsc --noEmit) || exit 1; done",
     "demo": "cd packages/demo && bun run src/demo.ts",
     "api": "cd packages/api && bun run start",

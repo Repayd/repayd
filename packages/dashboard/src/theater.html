@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Start, inspect, and return to a durable Arc-testnet demonstration. Real receipts, verified outcomes, and explicit trust disclosures."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <title>Theater — REPAYD</title>
+    <script src="/assets/theme.js"></script>
+    <link rel="stylesheet" href="/assets/dashboard.css" />
+    <script type="module" src="/assets/theater.js"></script>
+  </head>
+  <body data-page="theater">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="/" aria-label="REPAYD home"
+          ><svg
+            class="brand-mark"
+            viewBox="0 0 32 32"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 26V6h10a7 7 0 0 1 0 14h-5m5 0 8 6M2 26h8"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="square"
+            /></svg
+          ><span
+            ><span class="brand-word">REPAYD</span
+            ><span class="brand-caption"
+              >Autonomy, with accountability.</span
+            ></span
+          ></a
+        >
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a href="/">Home</a><a href="/owner" data-run-link="/owner">Owner</a
+          ><a href="/capital" data-run-link="/capital">Capital</a
+          ><a href="/record" data-run-link="/record">Record</a
+          ><a href="/theater" data-run-link="/theater" aria-current="page"
+            >Theater</a
+          ><a href="/flow" data-run-link="/flow">Flow</a>
+        </nav>
+        <div class="header-tools">
+          <span class="network">Arc testnet</span
+          ><button
+            class="theme-toggle"
+            type="button"
+            data-theme-toggle
+            aria-label="Switch theme"
+            aria-pressed="false"
+          >
+            <svg
+              class="theme-moon"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M20 15.4A8.5 8.5 0 0 1 8.6 4 8.5 8.5 0 1 0 20 15.4Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg
+            ><svg
+              class="theme-sun"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="4"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              /></svg
+            ><span data-theme-label>Theme</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <aside
+      id="active-run-banner"
+      class="active-run-banner"
+      aria-label="Active server run"
+      hidden
+    >
+      <div class="shell">
+        <p>
+          <span class="status-dot" aria-hidden="true"></span
+          ><strong id="active-run-label">A run is in progress</strong
+          ><span id="active-run-detail" data-active-detail
+            >Continues across navigation</span
+          >
+        </p>
+        <a id="active-run-link" href="/theater"
+          >Return to active run <span aria-hidden="true">→</span></a
+        >
+      </div>
+    </aside>
+    <main id="main" class="shell">
+      <noscript
+        ><p class="notice warning">
+          JavaScript is required to read saved runs and use dashboard controls.
+          Product information and navigation remain available.
+        </p></noscript
+      >
+      <div id="connection-error" class="notice error" role="alert" hidden>
+        <p id="connection-error-text"></p>
+        <div class="actions">
+          <button type="button" class="button small" data-retry-state>
+            Retry connection</button
+          ><button type="button" class="button small" data-follow-current>
+            Follow current run
+          </button>
+        </div>
+      </div>
+      <div id="action-message" class="notice" role="status" hidden></div>
+
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">04 / Theater</p>
+          <h1>Watch the protocol work.</h1>
+          <p>
+            From a fresh deployment to a verified result. Real transactions on
+            Arc testnet, with every assumption and decision left in the record.
+          </p>
+        </div>
+        <p class="heading-aside">
+          Leave the page. Follow a receipt. Come back.<br />The server keeps the
+          run—not your browser.
+        </p>
+      </div>
+      <section class="run-toolbar" aria-label="Run selection">
+        <div class="field">
+          <label for="run-history">Viewing run</label
+          ><select id="run-history" data-run-select disabled>
+            <option>Loading saved runs…</option>
+          </select>
+        </div>
+        <div class="run-context" data-run-context>Loading saved state…</div>
+        <div class="actions">
+          <button type="button" class="button small" data-retry-state>
+            Sync state
+          </button>
+        </div>
+      </section>
+      <section class="surface" aria-labelledby="execution-title">
+        <div class="run-control">
+          <div class="actions">
+            <button id="run-demo" class="button primary" type="button" disabled>
+              <span id="run-demo-label">Run demo</span
+              ><span aria-hidden="true">→</span></button
+            ><button id="reset-demo" class="button" type="button" disabled>
+              Reset presentation</button
+            ><a
+              class="button quiet"
+              data-run-link="/flow"
+              data-requires-run
+              aria-disabled="true"
+              tabindex="-1"
+              >View Flow <span aria-hidden="true">↗</span></a
+            >
+          </div>
+          <div id="theater-status" class="run-state-label" role="status">
+            <span class="pill">Loading state</span>
+          </div>
+        </div>
+        <p id="reset-explanation" class="snapshot-note">
+          Nothing starts on page load. Run demo submits one explicit
+          server-owned run.
+        </p>
+        <h2 id="execution-title" class="sr-only">Run execution</h2>
+        <dl class="run-facts">
+          <div>
+            <dt>Elapsed · real time</dt>
+            <dd id="run-elapsed">—</dd>
+          </div>
+          <div>
+            <dt>Started · local time</dt>
+            <dd id="run-started">Not started</dd>
+          </div>
+          <div>
+            <dt>Latest confirmed receipt</dt>
+            <dd id="run-latest-receipt">No receipt yet</dd>
+          </div>
+          <div>
+            <dt>Server heartbeat</dt>
+            <dd id="run-heartbeat">Awaiting server heartbeat</dd>
+          </div>
+        </dl>
+        <div class="progress-heading">
+          <label id="run-progress-label" for="run-progress">Loading state</label
+          ><span id="run-progress-value">0%</span>
+        </div>
+        <progress
+          id="run-progress"
+          max="100"
+          value="0"
+          aria-label="Recorded run progress"
+        ></progress>
+        <ol class="stage-list" aria-label="Execution stages">
+          <li data-phase="preflight">
+            <span class="stage-number">01</span><span>Preflight</span>
+          </li>
+          <li data-phase="deploying">
+            <span class="stage-number">02</span><span>Deploy</span>
+          </li>
+          <li data-phase="payroll">
+            <span class="stage-number">03</span><span>Payroll</span>
+          </li>
+          <li data-phase="containment">
+            <span class="stage-number">04</span><span>Contain</span>
+          </li>
+          <li data-phase="blocked">
+            <span class="stage-number">05</span><span>Block</span>
+          </li>
+          <li data-phase="recovery">
+            <span class="stage-number">06</span><span>Recover</span>
+          </li>
+          <li data-phase="provenance">
+            <span class="stage-number">07</span><span>Provenance</span>
+          </li>
+          <li data-phase="complete">
+            <span class="stage-number">08</span><span>Verify</span>
+          </li>
+        </ol>
+        <p class="trust-note">
+          <strong>Real testnet transactions. Constructed attack facts.</strong>
+          A local demo signer supplies verdicts; this is not a live TEE. Owner
+          decisions are scripted, not phone approvals.
+        </p>
+      </section>
+      <div id="run-outcome" class="notice section" role="status" hidden></div>
+      <dl id="theater-balances" class="balance-strip">
+        <div>
+          <dt>Protected wallet</dt>
+          <dd>—<small>Demo USDC</small></dd>
+        </div>
+        <div>
+          <dt>Owner wallet</dt>
+          <dd>—<small>Demo USDC</small></dd>
+        </div>
+        <div>
+          <dt>Held recipient</dt>
+          <dd>—<small>Demo USDC</small></dd>
+        </div>
+        <div>
+          <dt>Lookalike recipient</dt>
+          <dd>—<small>Demo USDC</small></dd>
+        </div>
+      </dl>
+      <p id="theater-snapshot-note" class="snapshot-note">
+        Waiting for verified chain balances. Missing values are not zero
+        balances.
+      </p>
+      <div class="split-layout section">
+        <div>
+          <section aria-labelledby="event-feed-title">
+            <div class="section-head">
+              <div>
+                <p class="section-label">The persistent record</p>
+                <h2 id="event-feed-title">Execution journal</h2>
+              </div>
+              <div class="actions">
+                <span id="event-count" class="fine-print">Loading events…</span
+                ><button
+                  id="jump-latest"
+                  class="button small"
+                  type="button"
+                  disabled
+                >
+                  Jump to latest
+                </button>
+              </div>
+            </div>
+            <div
+              id="theater-events"
+              class="evidence-list"
+              aria-label="Recorded run events"
+            >
+              <div class="loading-state">
+                Restoring the saved execution journal…
+              </div>
+            </div>
+          </section>
+          <section class="section" aria-labelledby="verification-title">
+            <div class="section-head">
+              <h2 id="verification-title">Final verification</h2>
+              <span id="check-count" class="pill">Awaiting result</span>
+            </div>
+            <div id="theater-checks" class="check-list">
+              <p class="fine-print">
+                Completion requires a verified result, not merely a process
+                exit.
+              </p>
+            </div>
+          </section>
+        </div>
+        <aside class="aside-stack" aria-label="Run evidence and disclosures">
+          <section class="surface">
+            <div class="section-head">
+              <h2>Recorded lanes</h2>
+              <span class="section-label">Events, not predictions</span>
+            </div>
+            <ul class="lane-list">
+              <li>
+                <div>
+                  <strong>Routine</strong>
+                  <p>Payments recorded within policy.</p>
+                </div>
+                <span id="lane-routine-count" class="lane-count">—</span>
+              </li>
+              <li>
+                <div>
+                  <strong>Elevated</strong>
+                  <p>Held proposals; not completed transfers.</p>
+                </div>
+                <span id="lane-elevated-count" class="lane-count">—</span>
+              </li>
+              <li>
+                <div>
+                  <strong>Violation</strong>
+                  <p>A recorded contract-enforced block.</p>
+                </div>
+                <span id="lane-violation-count" class="lane-count">—</span>
+              </li>
+              <li>
+                <div>
+                  <strong>Payout</strong>
+                  <p>Covered payments from the pool.</p>
+                </div>
+                <span id="lane-payout-count" class="lane-count">—</span>
+              </li>
+            </ul>
+            <div id="latest-action" class="trust-note">
+              <p>The latest recorded action will appear here.</p>
+            </div>
+          </section>
+          <section class="surface">
+            <div class="section-head">
+              <h2>The pool</h2>
+              <a href="/capital" data-run-link="/capital">Capital →</a>
+            </div>
+            <dl id="theater-pool" class="ledger">
+              <div>
+                <dt>Snapshot</dt>
+                <dd>Not available yet</dd>
+              </div>
+            </dl>
+            <p class="snapshot-note">
+              Mintable demo-token capital, not a quoted yield or investment.
+            </p>
+          </section>
+          <section>
+            <h2 class="section-head">Source notes</h2>
+            <details class="disclosure" open>
+              <summary>
+                What the chain proves<span class="chevron" aria-hidden="true"
+                  >›</span
+                >
+              </summary>
+              <div class="disclosure-body">
+                Balances and confirmed transaction receipts are real Arc-testnet
+                evidence. Expand a journal entry for the source, block, and
+                exact explorer link. A held proposal does not mean a recipient
+                was paid.
+              </div>
+            </details>
+            <details class="disclosure">
+              <summary>
+                What is deliberately constructed<span
+                  class="chevron"
+                  aria-hidden="true"
+                  >›</span
+                >
+              </summary>
+              <div class="disclosure-body">
+                The attack history and 04:00 clock facts are simulated inputs. A
+                controlled watcher false-negative releases the lookalike payment
+                to demonstrate residual loss and recovery. Verdicts use a local
+                signer. The owner-key freeze is scripted.
+              </div>
+            </details>
+            <details class="disclosure">
+              <summary>
+                What reset actually does<span class="chevron" aria-hidden="true"
+                  >›</span
+                >
+              </summary>
+              <div class="disclosure-body">
+                Reset clears the current presentation only. It does not undo
+                transactions, erase saved runs, or replenish a real wallet.
+                Another run reuses the configured actors and deploys fresh
+                contracts and a fresh mintable token.
+              </div>
+            </details>
+            <details class="disclosure">
+              <summary>
+                Deployment &amp; runner details<span
+                  class="chevron"
+                  aria-hidden="true"
+                  >›</span
+                >
+              </summary>
+              <div class="disclosure-body">
+                <dl id="theater-contracts" class="ledger"></dl>
+                <p class="snapshot-note">Run ID</p>
+                <p id="run-id" class="mono">Not started</p>
+                <button
+                  id="copy-run-id"
+                  class="button small"
+                  type="button"
+                  data-copy="run"
+                  disabled
+                >
+                  Copy run ID
+                </button>
+                <p id="receipt-count" class="snapshot-note">No receipts yet</p>
+                <p class="snapshot-note">Runner's last recorded activity</p>
+                <p id="runner-heartbeat" class="fine-print">
+                  No runner activity recorded
+                </p>
+              </div>
+            </details>
+          </section>
+        </aside>
+      </div>
+
+      <div
+        id="connection-status"
+        class="connection-line"
+        data-connection="offline"
+      >
+        <span
+          ><i class="status-dot" aria-hidden="true"></i
+          ><span id="connection-label">Connecting to saved state</span></span
+        ><span id="connection-age">Waiting for server</span>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <p>
+          <strong>REPAYD</strong> A testnet demonstration, not a real-money
+          insurance product.
+        </p>
+        <div class="footer-links">
+          <span>Arc · 5042002</span
+          ><a
+            href="https://testnet.arcscan.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Arc explorer ↗<span class="sr-only">
+              (opens in a new tab)</span
+            ></a
+          ><a href="/record" data-run-link="/record"
+            >Evidence &amp; provenance</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
