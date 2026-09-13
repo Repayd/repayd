@@ -109,9 +109,9 @@ $ curl -s http://localhost:8787/v1/circle/agent-wallet
 | VerdictRecord (TEE) | `0x7B46f82B37458771Bc88f79e5642e8AEFE2AC52f` |
 | MutualPool | `0x35d78e526cB230Eaa287AFe622f25DEB07B772e4` |
 | GuardAccount | `0xB30553e2f132126B951D3a6AD4E07EbAa5523b6E` |
-| ERC-8004 Identity | `0x8004A818BFB912233c491871b3d84c89A494BD9e` (startBlock 29241340) |
-| ERC-8004 Validation | `0x8004Cb1BF31DAf7788923b405b754f57acEB4272` (startBlock 29241349) |
-| ERC-8004 Reputation | `0x8004B663056A597Dffe9eCcC1965A193B7388713` (startBlock 29241344) |
+| ERC-8004 Identity | `0x8004A818BFB912233c491871b3d84c89A494BD9e` (first code block 29241340; index window starts 61614321) |
+| ERC-8004 Validation | `0x8004Cb1BF31DAf7788923b405b754f57acEB4272` (first code block 29241349; index window starts 61614321) |
+| ERC-8004 Reputation | `0x8004B663056A597Dffe9eCcC1965A193B7388713` (first code block 29241344; index window starts 61614321) |
 | Agent (ERC-8004 agentId) | **894341** |
 | Policy owner (Amara) | `0x9675b4D20d2ACFE55D00a02D55B9cdb57AEbD482` |
 | Verdict digest | `0x1af03bc6a70b6309bd5c9ec92c7d78c1024e0d69c9ea5ea60faf828c958ed3f0` |

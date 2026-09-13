@@ -5,7 +5,7 @@ Two subgraphs make up REPAYD's Graph track submission:
 | Subgraph | Package | What it indexes | Studio slug |
 |---|---|---|---|
 | Risk Subgraph | `packages/subgraph` | Policies, holds, verdicts, claims, pool flows (REPAYD contracts) | `repayd-risk-arc` |
-| ERC-8004 Standard Registries Subgraph | `packages/subgraph/erc8004` | Canonical identity/validation/reputation registries (EIP-8004 events) | `repayd` (created under this name in Studio; v0.0.7 LIVE) |
+| ERC-8004 Standard Registries Subgraph | `packages/subgraph/erc8004` | Canonical identity/validation/reputation registries (EIP-8004 events) | `repayd` (created under this name in Studio; v0.1.1 LIVE) |
 
 Both target **Arc testnet** (`network: arc-testnet`, chainId 5042002), which is
 on The Graph's supported-networks list — Studio hosting works with zero
@@ -98,10 +98,10 @@ clients; authenticated (`?jwt=`) quota is the 100k/mo pool.
 
 ### 6. Verify sync
 
-Studio shows sync progress (both subgraphs start at their exact deployment
-blocks — the Risk Subgraph startBlocks come from the deploy receipts, and the
-ERC-8004 subgraph starts at the binary-searched first-code blocks
-29241340 / 29241344 / 29241349, avoiding Arc's pruned-history errors).
+Studio shows sync progress. Risk Subgraph startBlocks come from deploy
+receipts. The ERC-8004 manifest starts all three sources at **61,614,321**,
+before the Step-4 registration at 61,625,041. This is a bounded history
+window, not a full replay from the registries' deployment blocks.
 
 Then query:
 
@@ -151,14 +151,14 @@ query {
   erc8004Agent(id: "894341") {
     owner agentURI wallet
     feedbacks(where: { tag1: "bulwark-verdict" }) { value valueDecimals tag2 isRevoked }
-    validations { response tag requestHash }
+    validations { id response tag responseHash }
   }
 }
 ```
 
 The ERC-8004 subgraph indexes the **canonical** registries
-(deterministic CREATE2 addresses, identical on every chain), so any
-ERC-8004-conformant agent — not just REPAYD-covered ones — appears there,
+(deterministic CREATE2 addresses, identical on every chain). It indexes
+events for any ERC-8004-conformant agent within the configured history window,
 and REPAYD's verdicts are mirrored into the standard schema. This mirrors
 The Graph's featured
 [Agent0/ERC-8004 subgraphs pattern](https://thegraph.com/docs/en/subgraphs/existing-subgraphs/agent0/):
@@ -176,7 +176,7 @@ canonical registries is explicitly in-scope for the track.
 | Studio create (UI click-path) | VERIFIED — slugs `repayd-risk-arc` + `repayd-erc8004` created |
 | **`graph deploy repayd-risk-arc`** | **VERIFIED LIVE** — v0.1.3, build `QmYBgJBw7h2AN5LJBs7nsVAnN3TuRWhPq6HpLQTp1b2h1i` |
 | **Live query + Risk Posture** | **VERIFIED** — real on-chain state from the endpoint (below) |
-| **`graph deploy repayd`** (erc8004 manifest) | **VERIFIED LIVE** — v0.0.7, build `QmSuRqRZQTEQt66biy72BB1RPNM9CDkpsejLPsLjakEmy6`; indexing canonical registries from blocks 29241340/29241344/29241349 (synced past 31.4M at capture; other agents' registrations/feedback already queryable) |
+| **`graph deploy repayd`** (erc8004 manifest) | **VERIFIED LIVE** — v0.1.1, startBlock **61,614,321**; query at **61,875,630** returned Step-4 agent **894341**, validation **25**, responseHash matching the verdict digest, and covered feedback **−2500 @ 2dp**. Initializing the required `responseURI` in `handleValidationRequest` fixed indexing of pending requests. |
 
 
 ### LIVE evidence (captured from the deployed endpoint)
@@ -211,7 +211,7 @@ Live endpoints:
 ```
 Risk Subgraph:      https://api.studio.thegraph.com/query/1760165/repayd-risk-arc/v0.1.3
 Studio dashboard:   https://thegraph.com/studio/subgraph/repayd-risk-arc
-ERC-8004 Subgraph:  https://api.studio.thegraph.com/query/1760165/repayd/v0.0.7
+ERC-8004 Subgraph:  https://api.studio.thegraph.com/query/1760165/repayd/v0.1.1
 Studio dashboard:   https://thegraph.com/studio/subgraph/repayd
 ```
 

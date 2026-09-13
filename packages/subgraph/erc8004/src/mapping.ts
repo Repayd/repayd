@@ -184,6 +184,7 @@ export function handleValidationRequest(event: ValidationRequest): void {
   // response: Int is nullable; 0..100 per EIP-8004 §validation);
   // responseHash is non-nullable → zero-bytes32 until the response lands.
   validation.responseHash = Bytes.fromHexString(ZERO_BYTES32);
+  validation.responseURI = "";
   validation.tag = "";
   validation.requestedAt = event.block.timestamp;
   validation.respondedAt = null;
