@@ -221,6 +221,23 @@ export async function deployProtocol(
   c: ProtocolClients,
   accounts: DeployAccounts,
 ): Promise<Protocol> {
+  const deployArtifacts = [
+    ["USDCMock", USDC_MOCK],
+    ["PolicyRegistry", POLICY_REGISTRY],
+    ["Blocklist", BLOCKLIST],
+    ["VerdictContract", VERDICT_CONTRACT],
+    ["MutualPool", MUTUAL_POOL],
+    ["GuardAccount", GUARD_ACCOUNT],
+  ] as const;
+  const missingBytecode = deployArtifacts
+    .filter(([, artifact]) => artifact.bytecode.object === "0x")
+    .map(([name]) => name);
+  if (missingBytecode.length)
+    throw new Error(
+      `fresh demo deployment requires Foundry bytecode artifacts for ${missingBytecode.join(
+        ", ",
+      )}; run forge build before starting a new testnet run`,
+    );
   const deployer = c.amara;
   const amaraAddr = accounts.amara.address;
 

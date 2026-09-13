@@ -1,6 +1,9 @@
 {
   "name": "aegis",
   "private": true,
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "version": "0.1.0",
   "description": "REPAYD — deposit insurance for AI agents. The seatbelt, the airbag, the black box, and the fleet contract.",
   "workspaces": [
