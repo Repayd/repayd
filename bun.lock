@@ -40,6 +40,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@noble/curves": "^1.6.0",
+        "@repayd/agent-sdk": "workspace:*",
         "@repayd/api": "workspace:*",
         "@repayd/engine": "workspace:*",
         "viem": "^2.21.0",

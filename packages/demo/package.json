@@ -8,10 +8,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@repayd/engine": "workspace:*",
+    "@noble/curves": "^1.6.0",
+    "@repayd/agent-sdk": "workspace:*",
     "@repayd/api": "workspace:*",
-    "viem": "^2.21.0",
-    "@noble/curves": "^1.6.0"
+    "@repayd/engine": "workspace:*",
+    "viem": "^2.21.0"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
