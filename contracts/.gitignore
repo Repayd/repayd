@@ -1,1 +1,2 @@
-deployments/
+deployments/*
+!deployments/5042002.json
