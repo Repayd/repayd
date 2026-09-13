@@ -32,29 +32,63 @@ import {
 import { anvil } from "viem/chains";
 import { privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
 import { secp256k1 } from "@noble/curves/secp256k1";
-import POLICY_REGISTRY_ARTIFACT from "../../../contracts/out/PolicyRegistry.sol/PolicyRegistry.json";
-import GUARD_ACCOUNT_ARTIFACT from "../../../contracts/out/GuardAccount.sol/GuardAccount.json";
-import VERDICT_CONTRACT_ARTIFACT from "../../../contracts/out/VerdictContract.sol/VerdictContract.json";
-import MUTUAL_POOL_ARTIFACT from "../../../contracts/out/MutualPool.sol/MutualPool.json";
-import BLOCKLIST_ARTIFACT from "../../../contracts/out/Blocklist.sol/Blocklist.json";
-import USDC_MOCK_ARTIFACT from "../../../contracts/out/USDCMock.sol/USDCMock.json";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Policy } from "@repayd/engine";
 import { toOnChainPolicy } from "@repayd/engine";
 import type { DeploymentRecord } from "@repayd/api/src/deployment.ts";
 import { publishTransaction } from "./bus.ts";
 import type { RunPhase } from "./run-types.ts";
 
-/** Forge JSON widens ABI discriminator strings; normalize once at import. */
 interface ProtocolArtifact {
   readonly abi: Abi;
   readonly bytecode: { readonly object: string };
 }
-const POLICY_REGISTRY = POLICY_REGISTRY_ARTIFACT as ProtocolArtifact;
-export const GUARD_ACCOUNT = GUARD_ACCOUNT_ARTIFACT as ProtocolArtifact;
-export const VERDICT_CONTRACT = VERDICT_CONTRACT_ARTIFACT as ProtocolArtifact;
-export const MUTUAL_POOL = MUTUAL_POOL_ARTIFACT as ProtocolArtifact;
-const BLOCKLIST = BLOCKLIST_ARTIFACT as ProtocolArtifact;
-const USDC_MOCK = USDC_MOCK_ARTIFACT as ProtocolArtifact;
+const artifactNames: Record<string, string> = {
+  PolicyRegistry: "PolicyRegistry",
+  GuardAccount: "GuardAccount",
+  VerdictContract: "VerdictContract",
+  MutualPool: "MutualPool",
+  Blocklist: "Blocklist",
+  USDCMock: "Usdc",
+};
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+function loadArtifact(name: string): ProtocolArtifact {
+  const candidates = [
+    join(repoRoot, "contracts", "out", `${name}.sol`, `${name}.json`),
+    join(repoRoot, "packages", "subgraph", "abis", `${artifactNames[name]}.json`),
+  ];
+  for (const path of candidates) {
+    try {
+      const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+      const object =
+        parsed && typeof parsed === "object" && !Array.isArray(parsed)
+          ? (parsed as {
+              abi?: Abi;
+              bytecode?: { object?: string };
+            })
+          : undefined;
+      const abi = Array.isArray(parsed) ? (parsed as Abi) : object?.abi;
+      if (Array.isArray(abi))
+        return {
+          abi,
+          bytecode: { object: object?.bytecode?.object ?? "0x" },
+        };
+    } catch {
+      // Try the next source. The committed ABIs cover attach mode.
+    }
+  }
+  throw new Error(
+    `Missing ${name} ABI. Run forge build or restore packages/subgraph/abis.`,
+  );
+}
+const POLICY_REGISTRY = loadArtifact("PolicyRegistry");
+export const GUARD_ACCOUNT = loadArtifact("GuardAccount");
+export const VERDICT_CONTRACT = loadArtifact("VerdictContract");
+export const MUTUAL_POOL = loadArtifact("MutualPool");
+const BLOCKLIST = loadArtifact("Blocklist");
+const USDC_MOCK = loadArtifact("USDCMock");
 
 export const ALICE = "0x328809bc894f92807417d2dad6b7c998c1afdac6";
 export const BOB = "0x1d96f2f6bef1202e4ce1ff6dad0c2cb002861d3e";
