@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/logo.png" alt="REPAYD" width="140" />
+</p>
+
 # REPAYD
 
 **Deposit insurance for AI agents. The seatbelt, the airbag, the black box, and the fleet contract — one machine.**
