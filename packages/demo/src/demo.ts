@@ -1115,7 +1115,33 @@ if (import.meta.main) {
       source: "system",
       text: `Demo failed: ${message}`,
     });
-    console.error(`DEMO FAILED: ${message}`);
+    // viem nests the failing method and the raw RPC response under
+    // details/metaMessages/cause; shortMessage alone hides the cause.
+    const e = error as {
+      name?: string;
+      details?: unknown;
+      metaMessages?: unknown;
+      request?: { method?: string };
+      cause?: { shortMessage?: string; message?: string };
+    };
+    const scrub = (s: string) =>
+      s
+        .replace(/https?:\/\/\S+/g, "[RPC endpoint]")
+        .replace(/0x[0-9a-fA-F]{64}/g, "[32-byte value]");
+    const extra = scrub(
+      [
+        e?.name ? `name=${e.name}` : "",
+        e?.request?.method ? `method=${e.request.method}` : "",
+        e?.details ? `details=${String(e.details)}` : "",
+        ...(Array.isArray(e?.metaMessages) ? e.metaMessages.map(String) : []),
+        e?.cause
+          ? `cause=${String(e.cause.shortMessage ?? e.cause.message ?? "")}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" | "),
+    );
+    console.error(`DEMO FAILED: ${message}${extra ? ` [${extra}]` : ""}`);
     endDemo();
     process.exitCode = 1;
   });

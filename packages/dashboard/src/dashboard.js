@@ -648,20 +648,15 @@ export async function refreshState() {
       return next;
     } catch (error) {
       if (requestGeneration !== generation) return null;
-      ready = false;
+      // A transient poll failure is not worth alarming the viewer: the stream
+      // may still be live and the last snapshot stays on screen. Only a
+      // genuinely missing run surfaces a banner.
       connectionError(
-        `${
-          error.status === 404
-            ? "That saved run could not be found. Choose another run or follow the current one."
-            : "Cannot refresh saved state. Any server-owned run may still be executing; the last received snapshot is shown."
-        } ${
-          error.name === "AbortError"
-            ? "The request timed out."
-            : error.status
-            ? `HTTP ${error.status}.`
-            : "Check the dashboard server connection."
-        }`,
+        error.status === 404
+          ? "That saved run could not be found. Choose another run or follow the current one."
+          : "",
       );
+      if (!state) ready = false;
       notifyState();
       return null;
     } finally {
@@ -692,9 +687,7 @@ function connectStream() {
     try {
       acceptState(JSON.parse(event.data), streamGeneration);
     } catch {
-      connectionError(
-        "A state update could not be read. The dashboard will refresh from the saved state endpoint.",
-      );
+      /* The next snapshot or polling refresh restores all state. */
     }
   });
   stream.addEventListener("heartbeat", (event) => {
