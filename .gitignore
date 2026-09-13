@@ -3,7 +3,8 @@ node_modules/
 /lib
 
 # foundry build outputs
-contracts/out/
+# contracts/out/ is tracked: the deployed runner deploys contracts from these
+# artifacts and has no Foundry toolchain available.
 contracts/cache/
 contracts/broadcast/
 

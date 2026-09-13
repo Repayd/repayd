@@ -1,0 +1,14 @@
+# One service, one public port.
+#
+# The dashboard binds $PORT (the only port the platform routes to) and serves the
+# runner routes plus a /v1/* passthrough to the coverage API on loopback.
+[build]
+builder = "NIXPACKS"
+buildCommand = "bun install"
+
+[deploy]
+startCommand = "bash scripts/start-service.sh"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
