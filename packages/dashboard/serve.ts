@@ -120,6 +120,27 @@ const server = Bun.serve({
         await mutation(req, url);
         return await proxy("/v1/circle/agent-wallet");
       }
+      // The coverage API runs beside this process; expose it on the same public
+      // port so a single deployment serves both surfaces.
+      if (url.pathname.startsWith("/v1/")) {
+        const upstream = await fetch(`${API}${url.pathname}${url.search}`, {
+          method: req.method,
+          headers: {
+            "content-type":
+              req.headers.get("content-type") ?? "application/json",
+          },
+          body: ["GET", "HEAD"].includes(req.method)
+            ? undefined
+            : await req.text(),
+        });
+        return new Response(upstream.body, {
+          status: upstream.status,
+          headers: {
+            ...headers,
+            "content-type": "application/json; charset=utf-8",
+          },
+        });
+      }
       return json(404, { error: "Not found." });
     } catch (error) {
       if (error instanceof RunError)
