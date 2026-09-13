@@ -12,10 +12,12 @@ const runs = new RunManager(ROOT);
 const pages: Record<string, string> = {
   "/": "landing",
   "/index.html": "landing",
-  "/owner": "owner",
+  "/app": "app",
+  "/owner": "app",
+  "/demo": "demo",
+  "/theater": "demo",
   "/capital": "capital",
   "/record": "record",
-  "/theater": "theater",
   "/flow": "flow",
 };
 const headers = {
@@ -42,7 +44,7 @@ const server = Bun.serve({
       if (req.method === "GET" && url.pathname.startsWith("/assets/")) {
         const name = url.pathname.slice("/assets/".length);
         if (
-          !/^[a-zA-Z\d][a-zA-Z\d._-]*\.(?:css|js|svg|woff2?|png|ico)$/.test(
+          !/^[a-zA-Z\d][a-zA-Z\d._-]*\.(?:css|js|svg|woff2?|ttf|png|ico)$/.test(
             name,
           )
         )

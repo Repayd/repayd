@@ -387,7 +387,7 @@ export function renderEvents(
           : "An empty ledger, ready for a run"
       }</h3><p>${esc(emptyText)}</p>${
         !run
-          ? '<div class="actions"><a class="button" href="/theater">Open Theater <span aria-hidden="true">→</span></a></div>'
+          ? '<div class="actions"><a class="button" href="/demo">Start the live demo <span aria-hidden="true">→</span></a></div>'
           : ""
       }</div>`,
     );
@@ -545,7 +545,7 @@ function renderChrome() {
       : "Execution is owned by the server",
   );
   const activeLink = $("active-run-link");
-  if (activeLink) activeLink.href = runURL("/theater", state?.activeRunId);
+  if (activeLink) activeLink.href = runURL("/demo", state?.activeRunId);
   const runs = state?.runs || [];
   document.querySelectorAll("[data-run-select]").forEach((select) => {
     const options = [
