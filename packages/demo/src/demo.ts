@@ -98,37 +98,39 @@ async function snapshot(
     Alice: ALICE,
     Bob: BOB,
   };
-  const [entries, junior, senior, daily, spendable, poolBalance] =
-    await Promise.all([
-      Promise.all(
-        Object.entries(wallets).map(
-          async ([label, address]) =>
-            [
-              label,
-              await c.public.readContract({
-                address: p.usdc.address,
-                abi: erc20Abi,
-                functionName: "balanceOf",
-                args: [address],
-                blockNumber,
-              }),
-            ] as const,
-        ),
-      ),
-      p.pool.read.juniorCapital!([], { blockNumber }) as Promise<bigint>,
-      p.pool.read.seniorCapital!([], { blockNumber }) as Promise<bigint>,
-      p.guard.read.dailyState!([], { blockNumber }) as Promise<
-        readonly [bigint, bigint, bigint]
-      >,
-      p.guard.read.spendableUsdc!([], { blockNumber }) as Promise<bigint>,
-      c.public.readContract({
+  // Read sequentially: the public Arc RPCs reject a concurrent burst from a
+  // single caller ("Request exceeds defined limit"), which the fan-out below
+  // triggered on every deployed run.
+  const entries: Array<readonly [string, bigint]> = [];
+  for (const [label, address] of Object.entries(wallets)) {
+    entries.push([
+      label,
+      await c.public.readContract({
         address: p.usdc.address,
         abi: erc20Abi,
         functionName: "balanceOf",
-        args: [p.pool.address],
+        args: [address],
         blockNumber,
       }),
-    ]);
+    ] as const);
+  }
+  const junior = (await p.pool.read.juniorCapital!(
+    [],
+    { blockNumber },
+  )) as bigint;
+  const senior = (await p.pool.read.seniorCapital!(
+    [],
+    { blockNumber },
+  )) as bigint;
+  const daily = await p.guard.read.dailyState!([], { blockNumber });
+  const spendable = await p.guard.read.spendableUsdc!([], { blockNumber });
+  const poolBalance = await c.public.readContract({
+    address: p.usdc.address,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [p.pool.address],
+    blockNumber,
+  });
   return {
     blockNumber,
     raw: Object.fromEntries(entries),
@@ -233,25 +235,16 @@ async function verifySetup(
   initial: Snapshot,
 ): Promise<void> {
   const read = { blockNumber: initial.blockNumber };
-  const [
-    owner,
-    agent,
-    watcher,
-    guardVerdicts,
-    poolVerdicts,
-    verdictPool,
-    authority,
-    nextHoldId,
-  ] = await Promise.all([
-    p.guard.read.OWNER!([], read),
-    p.guard.read.agentKey!([], read),
-    p.verdicts.read.watcher!([], read),
-    p.guard.read.verdictContract!([], read),
-    p.pool.read.verdictContract!([], read),
-    p.verdicts.read.pool!([], read),
-    p.guard.read.authorityRevoked!([], read),
-    p.guard.read.nextHoldId!([], read),
-  ]);
+  // Sequential for the same reason as snapshot(): concurrent reads trip the
+  // public Arc RPC request cap.
+  const owner = await p.guard.read.OWNER!([], read);
+  const agent = await p.guard.read.agentKey!([], read);
+  const watcher = await p.verdicts.read.watcher!([], read);
+  const guardVerdicts = await p.guard.read.verdictContract!([], read);
+  const poolVerdicts = await p.pool.read.verdictContract!([], read);
+  const verdictPool = await p.verdicts.read.pool!([], read);
+  const authority = await p.guard.read.authorityRevoked!([], read);
+  const nextHoldId = await p.guard.read.nextHoldId!([], read);
   requireEvidence(
     sameAddress(owner, c.amara.account!.address) &&
       sameAddress(agent, c.agent.account!.address) &&
