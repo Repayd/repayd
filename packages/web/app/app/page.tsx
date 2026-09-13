@@ -1,4 +1,5 @@
-import Link from "next/link";
-import { LiveOverview } from "../../components/live-overview";
-import { PageIntro, SiteShell, Pill } from "../../components/site-shell";
-export default function Overview() { return <SiteShell active="/app"><PageIntro active="/app" eyebrow="01 / Overview · Your control plane" title={<>Know what your agent<br />is allowed to do.</>}>Start with the live picture. Open the run when you want every receipt.</PageIntro><div className="wrap"><div className="run-card"><div><Pill tone="positive">ACTIVE AGENT · 894341</Pill><h3>Atlas is policy-bound and inspectable.</h3><p>Standard-registry identity, covered history, Arc testnet settlement.</p></div><Link className="button lime" href="/demo">Run the live story ↗</Link></div><LiveOverview /><section className="section"><div className="section-head"><div><p className="eyebrow">Three lines of defense</p><h2>From intent to recovery.</h2></div></div><div className="feature-grid"><div className="card"><span className="eyebrow">01 · BOUNDARY</span><h3>Set the rules before money moves.</h3><p>Recipient, amount, velocity, and daily limits are enforced on-chain.</p></div><div className="card"><span className="eyebrow">02 · EVIDENCE</span><h3>Replay every decision.</h3><p>Receipts, blocks, sources, and reasons stay attached to the run.</p></div><div className="card"><span className="eyebrow">03 · RECOVERY</span><h3>Close the loop when prevention misses.</h3><p>The pool routes a covered recovery to the owner.</p></div></div></section></div></SiteShell>; }
+import { AuthoredPage } from "../../components/authored-page";
+
+export default function Page() {
+  return <AuthoredPage name="app" />;
+}

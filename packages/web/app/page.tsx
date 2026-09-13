@@ -1,6 +1,11 @@
-import { SiteShell } from "../components/site-shell";
-import { HomeCta, HomeEcosystem, HomeHero, HomeHowItWorks, HomePartners, HomeProof, HomeStory } from "../components/home-sections";
+import { AuthoredPage } from "../components/authored-page";
+import { EcosystemCards } from "../components/ecosystem-cards";
 
 export default function Home() {
-  return <SiteShell><HomeHero /><HomePartners /><HomeHowItWorks /><HomeStory /><HomeProof /><HomeEcosystem /><HomeCta /></SiteShell>;
+  return (
+    <>
+      <AuthoredPage name="landing" />
+      <EcosystemCards />
+    </>
+  );
 }

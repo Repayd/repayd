@@ -1,4 +1,5 @@
-import Link from "next/link";
-import { DemoConsole } from "../../components/demo-console";
-import { PageIntro, SiteShell } from "../../components/site-shell";
-export default function Demo() { return <SiteShell active="/demo"><PageIntro active="/demo" eyebrow="02 / Live demo · Watch the boundary hold" title={<>Don’t take our word for it.<br />Run the protocol.</>}>One button starts a server-owned Arc testnet story. Follow the money from routine payroll to the recovery receipt.</PageIntro><div className="wrap"><DemoConsole /><section className="section"><div className="section-head"><div><p className="eyebrow">After the run</p><h2>Go from spectacle to evidence.</h2></div></div><div className="actions"><Link className="button lime" href="/record">Open agent record ↗</Link><Link className="button" href="/flow">Inspect every receipt ↗</Link><Link className="button" href="/capital">See recovery capital ↗</Link></div></section></div></SiteShell>; }
+import { AuthoredPage } from "../../components/authored-page";
+
+export default function Page() {
+  return <AuthoredPage name="demo" />;
+}

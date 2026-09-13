@@ -48,8 +48,10 @@ function renderLanding(state) {
           "Ready when you are",
         )}<p>No run is selected. The first transaction starts only when you press Run demo in Theater.</p>`,
   );
+  // The landing page may not carry the saved-run link; treat it as optional.
   const link = $("landing-run-link");
-  link.href = runURL("/theater", run?.id);
+  if (!link) return;
+  link.href = runURL("/demo", run?.id);
   link.textContent = run
     ? run.status === "running"
       ? "Return to the run →"
@@ -645,13 +647,20 @@ function lookupRun(event) {
   );
 }
 
+// Integration controls are optional: a page may render without them.
+const refreshAtlas = $("refresh-atlas");
+const loadCircleButton = $("load-circle");
 if (page === "owner") {
-  $("refresh-atlas").addEventListener("click", loadAtlas);
-  $("load-circle").addEventListener("click", loadCircle);
-  loadAtlas();
+  if (refreshAtlas && loadCircleButton) {
+    refreshAtlas.addEventListener("click", loadAtlas);
+    loadCircleButton.addEventListener("click", loadCircle);
+    loadAtlas();
+  }
 }
-if (page === "capital")
-  $("platform-form").addEventListener("submit", lookupPlatform);
+if (page === "capital") {
+  const platformForm = $("platform-form");
+  if (platformForm) platformForm.addEventListener("submit", lookupPlatform);
+}
 if (page === "record") {
   $("record-lookup-form").addEventListener("submit", lookupRun);
   $("record-search-results").addEventListener("click", (event) => {

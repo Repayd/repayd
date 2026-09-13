@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { ContractLinks } from "../../components/contract-links";
-import { LiveOverview } from "../../components/live-overview";
-import { PageIntro, SiteShell } from "../../components/site-shell";
-export default function Capital() { return <SiteShell active="/capital"><PageIntro active="/capital" eyebrow="04 / Capital · Recovery ledger" title={<>Capital with a job<br />to do.</>}>See what backs the selected run, what took first loss, and what the pool actually paid.</PageIntro><div className="wrap"><LiveOverview /><ContractLinks /><section className="section"><div className="section-head"><div><p className="eyebrow">MutualPool · first-loss ledger</p><h2>Who absorbs the loss?</h2></div><Link className="button" href="/demo">Create a run ↗</Link></div><div className="feature-grid"><div className="card"><span className="eyebrow">JUNIOR</span><h3>First-loss capital.</h3><p>Designed to absorb a covered loss before senior capital is touched.</p></div><div className="card"><span className="eyebrow">SENIOR</span><h3>After the junior tranche.</h3><p>Recorded separately so the recovery path remains legible.</p></div><div className="card"><span className="eyebrow">PAYOUT</span><h3>$135 covered.</h3><p>The live reference run closes with a same-block owner recovery.</p></div></div></section></div></SiteShell>; }
+import { AuthoredPage } from "../../components/authored-page";
+
+export default function Page() {
+  return <AuthoredPage name="capital" />;
+}

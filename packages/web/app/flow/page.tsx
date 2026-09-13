@@ -1,4 +1,5 @@
-import Link from "next/link";
-import { ContractLinks } from "../../components/contract-links";
-import { PageIntro, SiteShell } from "../../components/site-shell";
-export default function Flow() { return <SiteShell active="/flow"><PageIntro active="/flow" eyebrow="05 / Flow · Receipt inspector" title={<>Follow the money<br />line by line.</>}>A private, run-scoped ledger of what was called, what moved, and what reverted. No unrelated chain scans.</PageIntro><div className="wrap"><div className="card table-card"><div className="section-head"><div><p className="eyebrow">RUN-SCOPED RECEIPTS</p><h2>Transaction ledger.</h2></div><Link className="button" href="/demo">Choose a run ↗</Link></div><table className="ledger"><thead><tr><th>Stage</th><th>Action</th><th>Status</th><th>Evidence</th></tr></thead><tbody><tr><td>Payroll</td><td>Allowlisted recipients</td><td><span className="pill positive">success</span></td><td>Arc receipt</td></tr><tr><td>Containment</td><td>Suspicious hold frozen</td><td><span className="pill positive">verified</span></td><td>Verdict receipt</td></tr><tr><td>Policy</td><td>$900 over-cap attempt</td><td><span className="pill">reverted</span></td><td>Violation error</td></tr><tr><td>Recovery</td><td>Covered payout</td><td><span className="pill positive">$135 paid</span></td><td>Pool receipt</td></tr></tbody></table></div><ContractLinks /><section className="section"><div className="dark-panel"><div className="section-head"><div><p className="eyebrow">READ THE PROOF</p><h2>Open every receipt.<br />Trust nothing blindly.</h2></div><Link className="button lime" href="/record">Agent record ↗</Link></div></div></section></div></SiteShell>; }
+import { AuthoredPage } from "../../components/authored-page";
+
+export default function Page() {
+  return <AuthoredPage name="flow" />;
+}

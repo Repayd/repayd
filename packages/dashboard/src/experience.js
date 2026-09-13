@@ -2,7 +2,7 @@ const byId = (id) => document.getElementById(id);
 const query = (selector) => document.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-document.addEventListener('DOMContentLoaded', () => {
+function startExperience() {
   const header = query('.site-header');
   const menu = query('[data-menu-toggle]');
   menu?.addEventListener('click', () => {
@@ -110,4 +110,11 @@ document.addEventListener('DOMContentLoaded', () => {
     motion.setAttribute('aria-pressed', String(paused));
     motion.textContent = paused ? 'Play motion' : 'Pause motion';
   });
-});
+}
+
+// Page scripts load after hydration, so DOMContentLoaded may already have fired.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startExperience);
+} else {
+  startExperience();
+}
