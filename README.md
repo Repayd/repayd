@@ -141,3 +141,37 @@ The deepest hole in agent insurance is the owner attacking themselves: drain the
 ---
 
 *REPAYD — hold what's suspicious, prove who instructed what, pay what slips through — in the same block — and sell the whole machine to every platform launching agents.*
+
+## Deploying
+
+The public frontend and the demo backend deploy separately.
+
+**Frontend — Vercel** (repo root is the project root):
+
+```text
+vercel.json points the build at packages/web
+```
+
+Required environment variables:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://repayd.vercel.app
+REPAYD_API_URL=https://<service>.up.railway.app
+REPAYD_DASHBOARD_URL=https://<service>.up.railway.app
+REPAYD_RUNNER_TOKEN=<shared secret>
+```
+
+**Backend — one service, one port.** `railway.toml` supplies the build and start
+commands; the start script runs both processes and exposes the coverage API only
+through a `/v1/*` passthrough, so the process holding signing keys is never
+reachable directly.
+
+```text
+bun install                    build
+bash scripts/start-service.sh  start
+  ├── packages/api        :8787  loopback only
+  └── packages/dashboard  $PORT  public: /api/* + /v1/* passthrough
+```
+
+The container needs the compiled artifacts (`contracts/out`, tracked) and a
+writable volume for the run journal, mounted at `/app/.repayd`.
