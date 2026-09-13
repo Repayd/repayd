@@ -17,6 +17,7 @@
       "dependencies": {
         "@repayd/agent-sdk": "workspace:*",
         "@repayd/engine": "workspace:*",
+        "viem": "^2.21.0",
       },
       "devDependencies": {
         "typescript": "^5.5.0",
@@ -26,6 +27,9 @@
     "packages/dashboard": {
       "name": "@repayd/dashboard",
       "version": "0.1.0",
+      "dependencies": {
+        "viem": "^2.21.0",
+      },
       "devDependencies": {
         "typescript": "^5.5.0",
         "vitest": "^2.0.0",

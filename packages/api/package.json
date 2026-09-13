@@ -11,8 +11,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@repayd/agent-sdk": "workspace:*",
     "@repayd/engine": "workspace:*",
-    "@repayd/agent-sdk": "workspace:*"
+    "viem": "^2.21.0"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
