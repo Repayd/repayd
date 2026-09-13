@@ -1,0 +1,18 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/demo/run/route": "/api/demo/run",
+  "/api/demo/state/route": "/api/demo/state",
+  "/api/overview/route": "/api/overview",
+  "/app/page": "/app",
+  "/capital/page": "/capital",
+  "/demo/page": "/demo",
+  "/flow/page": "/flow",
+  "/icon.svg/route": "/icon.svg",
+  "/manifest.webmanifest/route": "/manifest.webmanifest",
+  "/opengraph-image/route": "/opengraph-image",
+  "/page": "/",
+  "/record/page": "/record",
+  "/robots.txt/route": "/robots.txt",
+  "/sitemap.xml/route": "/sitemap.xml"
+}

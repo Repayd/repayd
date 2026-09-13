@@ -1,0 +1,18 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+
+const nav = [
+  ["Overview", "/app"],
+  ["Live demo", "/demo"],
+  ["Capital", "/capital"],
+  ["Agent record", "/record"],
+  ["Flow", "/flow"],
+] as const;
+
+export function SiteShell({ children, active }: { children: ReactNode; active?: string }) {
+  return <><header className="site-header"><div className="wrap header-inner"><Link className="brand" href="/" aria-label="REPAYD home"><span className="brand-mark">R</span><span>repayd<span className="lime">.</span></span></Link><nav className="nav" aria-label="Primary navigation">{nav.map(([label, href]) => <Link key={href} className={active === href ? "active" : ""} href={href}>{label}</Link>)}</nav><div className="header-actions"><span className="network"><i /> Arc testnet</span><Link className="button lime compact" href="/demo">Run the story ↗</Link></div></div></header><main>{children}</main><footer className="footer"><div className="wrap footer-inner"><div><p className="eyebrow">THE CONTROL PLANE FOR AGENTS</p><p className="footer-lead">Let intelligence move.<br />Give risk a boundary.</p></div><div className="footer-links"><div>{nav.map(([label, href]) => <Link key={href} href={href}>{label} ↗</Link>)}</div><div><a href="https://www.circle.com/en/developer" target="_blank" rel="noreferrer">Circle ↗</a><a href="https://thegraph.com/studio/" target="_blank" rel="noreferrer">The Graph ↗</a><a href="https://hashscan.io/testnet" target="_blank" rel="noreferrer">Hedera ↗</a><a href="https://sepolia.app.ens.domains/name/atlasrepayd.eth" target="_blank" rel="noreferrer">ENS ↗</a></div></div><div className="footer-watermark">repayd<span>.</span></div></div><div className="wrap footer-bottom"><span>ETHOnline 2026 · Arc testnet · 5042002</span><span>Testnet prototype · Not a real-money insurance product.</span><a href="https://github.com/Repayd/repayd" target="_blank" rel="noreferrer">Open source ↗</a></div></footer></>;
+}
+
+export function SectionEyebrow({ children }: { children: ReactNode }) { return <p className="eyebrow"><i className="signal" />{children}</p>; }
+export function Pill({ children, tone = "" }: { children: ReactNode; tone?: string }) { return <span className={`pill ${tone}`}>{children}</span>; }
+export function PageIntro({ eyebrow, title, children, active }: { eyebrow: string; title: ReactNode; children: ReactNode; active?: string }) { return <><div className="wrap page-intro"><div><SectionEyebrow>{eyebrow}</SectionEyebrow><h1>{title}</h1><p>{children}</p></div><Pill tone="positive">Arc testnet · live reads</Pill></div><div className="wrap subnav">{nav.map(([label, href]) => <Link key={href} className={active === href ? "active" : ""} href={href}>{label}</Link>)}</div></>; }

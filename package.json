@@ -14,6 +14,9 @@
     "demo": "cd packages/demo && bun run src/demo.ts",
     "api": "cd packages/api && bun run start",
     "dashboard": "cd packages/dashboard && bun run start",
+    "web:dev": "cd packages/web && bun run dev",
+    "web:build": "cd packages/web && bun run build",
+    "web:start": "cd packages/web && bun run start",
     "subgraph:build": "cd packages/subgraph && bunx graph codegen && bunx graph build",
     "subgraph:build:erc8004": "cd packages/subgraph/erc8004 && bunx graph codegen && bunx graph build"
   },
