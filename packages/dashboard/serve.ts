@@ -4,7 +4,9 @@ import { ARC_CHAIN_ID } from "../demo/src/run-types.ts";
 import { scanFlow, type FlowResult } from "./src/flow.ts";
 import { RunError, RunManager } from "./src/run-manager.ts";
 
-const PORT = Number(process.env.REPAYD_DASH_PORT ?? 3000);
+// `??` would keep an empty string, and Number("") is 0, which asks Bun for a
+// random free port — the platform then routes to a port nothing is listening on.
+const PORT = Number(process.env.REPAYD_DASH_PORT || 3000);
 const HOST = process.env.REPAYD_DASH_HOST ?? "127.0.0.1";
 const ALLOW_REMOTE = process.env.REPAYD_ALLOW_REMOTE === "1";
 const RUNNER_TOKEN = process.env.REPAYD_RUNNER_TOKEN;
