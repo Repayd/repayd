@@ -312,7 +312,7 @@ function renderTransactions() {
                 : "Start a run in Theater, or select a historical run above. Flow never scans unrelated public-network activity."
             }</p>${
               !viewedRunId
-                ? '<div class="actions"><a class="button" href="/theater">Open Theater <span aria-hidden="true">→</span></a></div>'
+                ? '<div class="actions"><a class="button" href="/demo">Open live demo <span aria-hidden="true">→</span></a></div>'
                 : ""
             }`
       }</div>`,
