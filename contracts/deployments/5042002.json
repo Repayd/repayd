@@ -2,12 +2,12 @@
   "chainId": 5042002,
   "chainIdAnchor": "0x00000000000000000000000000000000004cef52",
   "contracts": {
-    "usdc": "0xb95fe4d7EEDb98693ded8F3c1a34A59F6Dac114B",
-    "policyRegistry": "0xcC34D02877E13Bf35Ad7E4eBC747d431B76e748a",
-    "blocklist": "0x19afa08179eD7De19a0e45FC35362A663ACa8322",
-    "verdicts": "0x7B46f82B37458771Bc88f79e5642e8AEFE2AC52f",
-    "mutualPool": "0x35d78e526cB230Eaa287AFe622f25DEB07B772e4",
-    "guardAccount": "0xB30553e2f132126B951D3a6AD4E07EbAa5523b6E"
+    "usdc": "0xef10028bc675f48161c54e30532f4e953268c7d8",
+    "policyRegistry": "0x533dadb1c72f6176a9e9d04e1314e631e5d9ab28",
+    "blocklist": "0x668d858401b6ca0fde8c7fb2d4967846345cc9ca",
+    "verdicts": "0x06ad5f42f365b467490b61083c5962a3a2315bce",
+    "mutualPool": "0x18996c6260dfd0017f4a2606fefe548f97818720",
+    "guardAccount": "0xd52f525801ad0f715aa1200de7da9a861fe2020d"
   },
   "actors": {
     "deployer": "0x9675b4D20d2ACFE55D00a02D55B9cdb57AEbD482",
@@ -21,7 +21,7 @@
     "identity": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
     "reputation": "0x8004B663056A597Dffe9eCcC1965A193B7388713",
     "validation": "0x8004Cb1BF31DAf7788923b405b754f57acEB4272",
-    "note": "canonical CREATE2 registries; contracts have no on-chain 8004 wiring - consumed off-chain via SDK erc8004ForChain"
+    "note": "Canonical registry addresses only; no ERC-8004 registration or reputation transaction is performed by this run."
   },
   "seed": {
     "guardBacking": "4000000000",
