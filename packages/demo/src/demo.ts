@@ -122,8 +122,12 @@ async function snapshot(
     [],
     { blockNumber },
   )) as bigint;
-  const daily = await p.guard.read.dailyState!([], { blockNumber });
-  const spendable = await p.guard.read.spendableUsdc!([], { blockNumber });
+  const daily = (await p.guard.read.dailyState!([], {
+    blockNumber,
+  })) as readonly [bigint, bigint, bigint];
+  const spendable = (await p.guard.read.spendableUsdc!([], {
+    blockNumber,
+  })) as bigint;
   const poolBalance = await c.public.readContract({
     address: p.usdc.address,
     abi: erc20Abi,

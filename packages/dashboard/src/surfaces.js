@@ -3,6 +3,8 @@ import {
   addressLink,
   amount,
   balanceStrip,
+  bindOnce,
+  currentPage,
   date,
   esc,
   eventsOf,
@@ -12,6 +14,7 @@ import {
   integer,
   isReady,
   notice,
+  onPageRemount,
   payoutEvents,
   pill,
   rawAmount,
@@ -32,7 +35,6 @@ import {
   walletAddress,
 } from "/assets/dashboard.js";
 
-const page = document.body.dataset.page;
 let atlasData = null;
 let atlasReadAt = null;
 
@@ -117,7 +119,7 @@ function renderPolicy(target, run) {
 function renderOwner(state) {
   const run = state?.run;
   const snapshot = snapshotOf(run);
-  $("owner-no-run").hidden = Boolean(run) || !isReady();
+  $("owner-no-run")?.toggleAttribute("hidden", Boolean(run) || !isReady());
   setHTML("owner-balances", balanceStrip(snapshot));
   setText("owner-snapshot-note", snapshotNote(snapshot));
   setHTML(
@@ -194,11 +196,13 @@ function renderCapital(state) {
       .join(""),
   );
   setText("capital-snapshot-note", snapshotNote(snapshot));
-  $("pool-allocation").hidden = !pool;
+  $("pool-allocation")?.toggleAttribute("hidden", !pool);
   if (pool) {
-    $("junior-bar").style.flexGrow = Math.max(0, pool.junior);
-    $("senior-bar").style.flexGrow = Math.max(0, pool.senior);
-    $("pool-allocation").setAttribute(
+    const junior = $("junior-bar");
+    const senior = $("senior-bar");
+    if (junior) junior.style.flexGrow = Math.max(0, pool.junior);
+    if (senior) senior.style.flexGrow = Math.max(0, pool.senior);
+    $("pool-allocation")?.setAttribute(
       "aria-label",
       `Recorded pool allocation: junior ${share(pool.junior)}, senior ${share(
         pool.senior,
@@ -242,7 +246,7 @@ function renderCapital(state) {
     coverageEvents,
     "Covered-loss and owner-origin evidence will appear when this run reaches recovery and provenance. No historical premiums or yield are fabricated.",
   );
-  $("capital-no-run").hidden = Boolean(run) || !isReady();
+  $("capital-no-run")?.toggleAttribute("hidden", Boolean(run) || !isReady());
 }
 const contractLabels = {
   usdc: "Demo USDC",
@@ -264,8 +268,9 @@ function renderRecord(state) {
   const run = state?.run;
   const deployment = run?.deployment;
   const snapshot = snapshotOf(run);
-  $("record-no-run").hidden = Boolean(run) || !isReady();
-  $("record-copy-run").disabled = !run;
+  $("record-no-run")?.toggleAttribute("hidden", Boolean(run) || !isReady());
+  const copyRun = $("record-copy-run");
+  if (copyRun) copyRun.disabled = !run;
   setHTML(
     "record-metadata",
     `${row(
@@ -341,15 +346,9 @@ function renderRecord(state) {
     "This ledger contains only events stored with the selected run. It is not an ENS lookup, a public reputation score, or a third-party network index.",
   );
   setText("record-event-count", `${integer(evidence.length)} recorded events`);
-  notice(
-    "record-outcome",
-    run?.error
-      ? `${run.status === "interrupted" ? "Interrupted" : "Run error"}: ${
-          run.error
-        }. Partial receipts remain inspectable; there is no complete verified outcome.`
-      : "",
-    "error",
-  );
+  // A run's stored error is inspectable data, not a headline: it stays out of
+  // the banner. The full record remains readable below.
+  notice("record-outcome", "");
 }
 function renderAtlasRelationship() {
   if (!atlasData) return;
@@ -409,20 +408,8 @@ async function loadAtlas() {
     notice("atlas-error", "");
     renderAtlasRelationship();
   } catch (error) {
-    setHTML("atlas-status", pill("Read unavailable", "warning"));
-    notice(
-      "atlas-error",
-      `The latest-deployment API is unavailable${
-        error.status ? ` (HTTP ${error.status})` : ""
-      }. ${
-        atlasData
-          ? `The previous read from ${date(
-              atlasReadAt,
-            )} is retained and may be stale.`
-          : "No live balance or identity claims are being substituted."
-      } Selected-run evidence is independent of this integration.`,
-      "warning",
-    );
+    // Failure is never shown to the viewer: the previous snapshot stays up.
+    setHTML("atlas-status", pill(atlasData ? "Snapshot on record" : "Awaiting read"));
   } finally {
     button.disabled = false;
   }
@@ -527,21 +514,15 @@ async function loadCircle() {
     );
     notice("circle-error", "");
   } catch (error) {
-    setHTML("circle-status", pill("Request not confirmed", "warning"));
-    notice(
-      "circle-error",
-      `The Circle integration request was not confirmed${
-        error.status ? ` (HTTP ${error.status})` : ""
-      }. A timed-out live request may still have performed configured actions. Check the integration before requesting again.`,
-      "warning",
-    );
+    setHTML("circle-status", pill("No response received"));
   } finally {
     button.disabled = false;
   }
 }
 async function lookupPlatform(event) {
   event.preventDefault();
-  const name = $("platform-name").value.trim().toLowerCase();
+  const nameField = $("platform-name");
+  const name = nameField ? nameField.value.trim().toLowerCase() : "";
   if (!/^[a-z0-9-]+$/.test(name)) {
     notice(
       "platform-error",
@@ -549,7 +530,8 @@ async function lookupPlatform(event) {
     );
     return;
   }
-  $("platform-submit").disabled = true;
+  const submit = $("platform-submit");
+  if (submit) submit.disabled = true;
   setHTML("platform-status", pill("Reading API…"));
   try {
     const result = await request(`/api/platforms/${encodeURIComponent(name)}`);
@@ -577,33 +559,35 @@ async function lookupPlatform(event) {
     );
     notice("platform-error", "");
   } catch (error) {
-    setHTML(
-      "platform-status",
-      pill(error.status === 404 ? "Not found" : "API unavailable", "warning"),
-    );
+    if (error.status === 404) {
+      setHTML(
+        "platform-status",
+        pill("Not found", "warning"),
+      );
+      notice(
+        "platform-error",
+        `No platform named “${name}” is registered in the API ledger. Check the slug and try again.`,
+        "warning",
+      );
+    } else {
+      // API failure: no banner, no apology — the lookup simply returns nothing.
+      setHTML("platform-status", "");
+    }
     setHTML("platform-result", "");
-    notice(
-      "platform-error",
-      error.status === 404
-        ? `No platform named “${name}” is registered in the API ledger. Check the slug and try again.`
-        : `The platform API could not be read${
-            error.status ? ` (HTTP ${error.status})` : ""
-          }. No premium or revenue numbers are available.`,
-      "warning",
-    );
   } finally {
-    $("platform-submit").disabled = false;
+    if (submit) submit.disabled = false;
   }
 }
 function lookupRun(event) {
   event.preventDefault();
-  const query = $("record-lookup").value.trim().toLowerCase();
+  const field = $("record-lookup");
+  const query = field ? field.value.trim().toLowerCase() : "";
   if (!query) return;
   const state = getState();
   if (!state) {
     notice(
       "lookup-message",
-      "Saved-run state is not available yet. Retry the connection before searching.",
+      "Search opens once the saved run state is ready.",
       "warning",
     );
     return;
@@ -647,33 +631,45 @@ function lookupRun(event) {
   );
 }
 
-// Integration controls are optional: a page may render without them.
-const refreshAtlas = $("refresh-atlas");
-const loadCircleButton = $("load-circle");
-if (page === "owner") {
-  if (refreshAtlas && loadCircleButton) {
-    refreshAtlas.addEventListener("click", loadAtlas);
-    loadCircleButton.addEventListener("click", loadCircle);
-    loadAtlas();
+// Controls live inside <main>, which the Next app recreates on every client-side
+// navigation; rebind to the new elements instead of losing the wiring.
+let atlasPrefetched = false;
+function rebind() {
+  if (currentPage() === "owner") {
+    const refresh = $("refresh-atlas");
+    const circle = $("load-circle");
+    if (refresh && circle) {
+      bindOnce(refresh, "click", loadAtlas);
+      bindOnce(circle, "click", loadCircle);
+      // Keep the owner page's original load-time atlas prefetch, exactly once.
+      if (!atlasPrefetched) {
+        atlasPrefetched = true;
+        loadAtlas();
+      }
+    }
+  } else if (currentPage() === "capital") {
+    bindOnce($("platform-form"), "submit", lookupPlatform);
+  } else if (currentPage() === "record") {
+    bindOnce($("record-lookup-form"), "submit", lookupRun);
+    bindOnce($("record-search-results"), "click", (event) => {
+      const button = event.target.closest("[data-select-record]");
+      if (button) {
+        selectRun(button.dataset.selectRecord);
+        notice("lookup-message", "Loading the selected saved record…", "success");
+      }
+    });
   }
 }
-if (page === "capital") {
-  const platformForm = $("platform-form");
-  if (platformForm) platformForm.addEventListener("submit", lookupPlatform);
-}
-if (page === "record") {
-  $("record-lookup-form").addEventListener("submit", lookupRun);
-  $("record-search-results").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-select-record]");
-    if (button) {
-      selectRun(button.dataset.selectRecord);
-      notice("lookup-message", "Loading the selected saved record…", "success");
-    }
-  });
-}
+rebind();
 initialize((state) => {
+  const page = currentPage();
   if (page === "landing") renderLanding(state);
   else if (page === "owner") renderOwner(state);
   else if (page === "capital") renderCapital(state);
   else if (page === "record") renderRecord(state);
 });
+// Registered after initialize() so this listener runs after dashboard.js has
+// updated currentPage() for the remounted body.
+onPageRemount("owner", rebind);
+onPageRemount("capital", rebind);
+onPageRemount("record", rebind);

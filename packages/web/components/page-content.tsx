@@ -21,6 +21,9 @@ export type PageContentData = {
  * When `slot` is supplied the body is split around one section, which is then
  * rendered by a React component instead.
  */
+/** Pages whose scripts this document has already evaluated. */
+const evaluated: Record<string, true> = {};
+
 export function PageContent({
   content,
   slot,
@@ -41,6 +44,19 @@ export function PageContent({
       document.body.appendChild(script);
       return script;
     });
+    // The browser's module map caches by URL per document, so a re-injected
+    // script never runs again. React, meanwhile, has just rebuilt the page
+    // body from markup — every listener the module attached to the previous
+    // nodes is gone with them. Tell the live modules to rebind to the new
+    // nodes; on the first visit the module initialises itself and must not
+    // get a second, duplicated pass.
+    if (evaluated[content.page]) {
+      document.dispatchEvent(
+        new CustomEvent("repayd:remount", { detail: { page: content.page } }),
+      );
+    } else {
+      evaluated[content.page] = true;
+    }
     return () => {
       for (const script of added) script.remove();
     };

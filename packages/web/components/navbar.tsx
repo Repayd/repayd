@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { NAV } from "./nav";
 import { Shield } from "./shield";
@@ -10,14 +11,15 @@ type Theme = "light" | "dark";
 export function Navbar() {
   const [theme, setTheme] = useState<Theme>("light");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [pathname, setPathname] = useState("");
+  // The router owns the active path: the layout-mounted navbar must re-highlight
+  // on client-side navigation, not only on the page it first hydrated with.
+  const pathname = usePathname();
 
   // theme.js applies the stored theme before paint; mirror it into React state
   // so the toggle's attributes are owned by React after hydration.
   useEffect(() => {
     const current = document.documentElement.dataset.theme;
     if (current === "dark" || current === "light") setTheme(current);
-    setPathname(window.location.pathname);
   }, []);
 
   useEffect(() => {

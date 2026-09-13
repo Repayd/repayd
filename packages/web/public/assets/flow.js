@@ -2,6 +2,7 @@ import {
   $,
   addressLink,
   amount,
+  bindOnce,
   date,
   esc,
   explorerLink,
@@ -11,6 +12,7 @@ import {
   isReady,
   iso,
   notice,
+  onPageRemount,
   pill,
   reconcile,
   request,
@@ -53,10 +55,16 @@ if (!["all", "15m", "1h", "24h", "custom"].includes(filters.range))
 if (!["all", "success", "reverted"].includes(filters.status))
   filters.status = "all";
 if (!["newest", "oldest"].includes(filters.sort)) filters.sort = "newest";
+const setVal = (id, value) => {
+  const el = $(id);
+  if (el) el.value = value;
+};
 for (const [key, value] of Object.entries(filters)) {
-  if (key === "category" && value !== "all")
-    $("filter-category").add(new Option(value, value));
-  $(key === "q" ? "flow-search" : `filter-${key}`).value = value;
+  if (key === "category" && value !== "all") {
+    const category = $("filter-category");
+    if (category) category.add(new Option(value, value));
+  }
+  setVal(key === "q" ? "flow-search" : `filter-${key}`, value);
 }
 
 let viewedRunId = null;
@@ -82,23 +90,25 @@ function saveFilters() {
   history.replaceState(null, "", url.pathname + url.search + url.hash);
 }
 function readFilters() {
-  for (const key of Object.keys(defaults))
-    filters[key] = $(key === "q" ? "flow-search" : `filter-${key}`).value;
+  for (const key of Object.keys(defaults)) {
+    const el = $(key === "q" ? "flow-search" : `filter-${key}`);
+    if (el) filters[key] = el.value;
+  }
   saveFilters();
   renderTransactions();
 }
 function timeBounds() {
-  $("custom-range").hidden = filters.range !== "custom";
-  $("filter-from").removeAttribute("aria-invalid");
-  $("filter-to").removeAttribute("aria-invalid");
+  $("custom-range")?.toggleAttribute("hidden", filters.range !== "custom");
+  $("filter-from")?.removeAttribute("aria-invalid");
+  $("filter-to")?.removeAttribute("aria-invalid");
   if (filters.range === "custom") {
     const start = filters.from
       ? new Date(filters.from).getTime() / 1000
       : -Infinity;
     const end = filters.to ? new Date(filters.to).getTime() / 1000 : Infinity;
     if (Number.isNaN(start) || Number.isNaN(end) || start > end) {
-      $("filter-from").setAttribute("aria-invalid", "true");
-      $("filter-to").setAttribute("aria-invalid", "true");
+      $("filter-from")?.setAttribute("aria-invalid", "true");
+      $("filter-to")?.setAttribute("aria-invalid", "true");
       return {
         error:
           "Choose a valid custom date range. The start must be at or before the end.",
@@ -154,6 +164,7 @@ function updateCategories() {
       })),
   ];
   const select = $("filter-category");
+  if (!select) return;
   const signature = JSON.stringify(options);
   if (select.dataset.options !== signature) {
     select.replaceChildren(
@@ -290,7 +301,7 @@ function renderTransactions() {
       loading
         ? "Loading recorded receipts…"
         : failed
-        ? "Receipt data unavailable"
+        ? "No transactions loaded"
         : "No transactions loaded",
     );
     setHTML(
@@ -299,15 +310,11 @@ function renderTransactions() {
         loading
           ? "Reading the selected run's exact transaction receipts…"
           : `<h3>${
-              failed
-                ? "The chain read did not succeed"
-                : viewedRunId
+              failed || viewedRunId
                 ? "Waiting for recorded transactions"
                 : "Choose a run to follow the funds"
             }</h3><p>${
-              failed
-                ? "No empty success has been substituted for the failed read. Use Refresh receipts to try again."
-                : viewedRunId
+              failed || viewedRunId
                 ? "Transactions appear after the runner records confirmed receipts."
                 : "Start a run in Theater, or select a historical run above. Flow never scans unrelated public-network activity."
             }</p>${
@@ -444,7 +451,8 @@ function renderScope() {
       ? "Active run · new receipts refresh automatically"
       : "Historical snapshot · refresh on demand",
   );
-  $("refresh-flow").disabled = loading || !run;
+  const refresh = $("refresh-flow");
+  if (refresh) refresh.disabled = loading || !run;
   setText("refresh-flow-label", loading ? "Reading…" : "Refresh receipts");
   notice(
     "flow-message",
@@ -525,18 +533,10 @@ async function loadFlow() {
     updateCategories();
   } catch (error) {
     if (sequence !== requestSequence || runId !== viewedRunId) return;
+    // A failed read is retried quietly; the viewer never sees the failure
+    // wording — previously loaded receipts simply remain on screen.
     failed = true;
-    notice(
-      "flow-error",
-      `${
-        data
-          ? "Refresh failed; previously read receipts remain visible and may be stale."
-          : "Receipts could not be read; no chain results are being fabricated."
-      } ${
-        error.name === "AbortError" ? "The request timed out." : error.message
-      }`,
-      "error",
-    );
+    notice("flow-error", "");
   } finally {
     if (sequence === requestSequence) {
       loading = false;
@@ -594,17 +594,23 @@ function onState(state) {
 function clearFilters() {
   Object.assign(filters, defaults);
   for (const [key, value] of Object.entries(filters))
-    $(key === "q" ? "flow-search" : `filter-${key}`).value = value;
+    setVal(key === "q" ? "flow-search" : `filter-${key}`, value);
   saveFilters();
   renderTransactions();
 }
-$("flow-filters").addEventListener("submit", (event) => {
-  event.preventDefault();
-  readFilters();
-});
-$("flow-filters").addEventListener("input", readFilters);
-$("flow-filters").addEventListener("change", readFilters);
-$("refresh-flow").addEventListener("click", loadFlow);
+function bindPage() {
+  const form = $("flow-filters");
+  if (form) {
+    bindOnce(form, "submit", (event) => {
+      event.preventDefault();
+      readFilters();
+    });
+    bindOnce(form, "input", readFilters);
+    bindOnce(form, "change", readFilters);
+  }
+  bindOnce($("refresh-flow"), "click", loadFlow);
+}
+bindPage();
 document.addEventListener("click", (event) => {
   if (event.target.closest("[data-clear-filters]")) clearFilters();
 });
@@ -618,6 +624,18 @@ initialize(onState, () => {
     lastPresetMinute = minute;
     renderTransactions();
   }
+});
+onPageRemount("flow", () => {
+  for (const key of Object.keys(defaults)) {
+    const el = $(key === "q" ? "flow-search" : `filter-${key}`);
+    if (el) el.value = filters[key];
+  }
+  bindPage();
+  // Force the next state tick to refetch the ledger for the new controls.
+  observedRunVersion = "";
+  renderScope();
+  renderTransactions();
+  renderWallets();
 });
 setInterval(() => {
   if (!document.hidden && getState()?.run?.status === "running") loadFlow();

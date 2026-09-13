@@ -195,18 +195,135 @@ export const DEMO_CHAIN_ID = Number(
   process.env.DEMO_CHAIN_ID ?? process.env.ARC_TESTNET_CHAIN_ID ?? anvil.id,
 );
 
+/**
+ * Arc's public RPCs throttle bursts and reject some calls with provider-specific
+ * messages such as "Request exceeds defined limit". A run that has already
+ * broadcast 19 transactions must not die on one throttled read — and the raw
+ * `http()` transport defaults to `retryCount: 0`, so it does exactly that.
+ *
+ * Every request therefore passes through a small concurrency gate and is
+ * retried with exponential backoff when the provider reports a transient
+ * failure. Permanent failures (reverts, bad params, insufficient funds) are
+ * rethrown unchanged on the first attempt.
+ */
+const TRANSIENT_RPC_FAILURE =
+  /exceeds|limit|rate|throttl|too many|timeout|timed out|temporar|busy|overload|429|50[234]/i;
+const RPC_MAX_CONCURRENT = 4;
+const RPC_MAX_ATTEMPTS = 6;
+
+/** Flatten whatever a failed provider call carries into one searchable string. */
+function describeRpcFailure(error: unknown): string {
+  if (!error || typeof error !== "object") return String(error);
+  const parts: string[] = [];
+  if ("details" in error) parts.push(String(error.details));
+  if ("shortMessage" in error) parts.push(String(error.shortMessage));
+  if ("message" in error) parts.push(String(error.message));
+  // viem embeds the request URL, and a local endpoint's ephemeral port can read
+  // as a status code (429/50x). Strip URLs and addresses before classifying.
+  return parts
+    .join(" ")
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/0x[0-9a-fA-F]{40,}/g, " ");
+}
+
+/**
+ * A deferred. `Promise.withResolvers` is the preferred form, but vitest's
+ * worker context does not expose it (the module runs under Bun in production
+ * and under vitest in tests), so the constructor form is the fallback.
+ */
+export function deferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+} {
+  // Reasoning: Bun ships withResolvers; the test runner's global does not.
+  const holder = Promise as unknown as {
+    withResolvers?: <U>() => {
+      promise: Promise<U>;
+      resolve: (value: U) => void;
+    };
+  };
+  if (typeof holder.withResolvers === "function") {
+    return holder.withResolvers<T>();
+  }
+  let resolvePromise: (value: T) => void = () => {};
+  const promise = new Promise<T>((resolve) => {
+    resolvePromise = resolve;
+  });
+  return { promise, resolve: resolvePromise };
+}
+
+function rpcDelay(ms: number): Promise<void> {
+  const { promise, resolve } = deferred<void>();
+  setTimeout(resolve, ms);
+  return promise;
+}
+
+// The concurrency limit belongs to the provider, not to one client instance:
+// the demo builds several transports (a public client plus a wallet client per
+// role) and they must share a single request budget.
+let rpcActive = 0;
+const rpcWaiting: Array<() => void> = [];
+
+function rpcAcquire(): Promise<void> {
+  if (rpcActive < RPC_MAX_CONCURRENT) {
+    rpcActive += 1;
+    return Promise.resolve();
+  }
+  const { promise, resolve } = deferred<void>();
+  rpcWaiting.push(() => {
+    rpcActive += 1;
+    resolve();
+  });
+  return promise;
+}
+
+function rpcRelease(): void {
+  rpcActive -= 1;
+  rpcWaiting.shift()?.();
+}
+
+export function resilientTransport(url: string): Transport {
+  const base = http(url, { retryCount: 0, timeout: 30_000 });
+  return (transportOptions) => {
+    const inner = base(transportOptions);
+    // viem types `request` as a generic function; the retry wrapper cannot
+    // express that genericity, so it is asserted to the wrapped signature.
+    const request = (async (args: unknown) => {
+      for (let attempt = 1; ; attempt += 1) {
+        await rpcAcquire();
+        try {
+          return await inner.request(args as never);
+        } catch (error) {
+          if (
+            attempt >= RPC_MAX_ATTEMPTS ||
+            !TRANSIENT_RPC_FAILURE.test(describeRpcFailure(error))
+          ) {
+            throw error;
+          }
+          await rpcDelay(
+            Math.min(400 * 2 ** (attempt - 1), 6_000) + Math.random() * 200,
+          );
+        } finally {
+          rpcRelease();
+        }
+      }
+    }) as typeof inner.request;
+    return { ...inner, request };
+  };
+}
+
 /** viem clients shared by the demo, bound to DEMO_CHAIN_ID's chain. */
 export function clients(): ProtocolClients {
   const chain = { ...anvil, id: DEMO_CHAIN_ID } as typeof anvil;
   const pub = createPublicClient({
     chain,
-    transport: http(rpcUrl(), { retryCount: 0, timeout: 30_000 }),
+    transport: resilientTransport(rpcUrl()),
   });
   const rw = (account: PrivateKeyAccount): ReadWriteClient =>
     createWalletClient({
       account,
       chain,
-      transport: http(rpcUrl(), { retryCount: 0, timeout: 30_000 }),
+      transport: resilientTransport(rpcUrl()),
     }).extend(publicActions);
   return {
     public: pub,
@@ -733,7 +850,7 @@ function asRw(account: PrivateKeyAccount): ReadWriteClient {
   return createWalletClient({
     account,
     chain,
-    transport: http(rpcUrl(), { retryCount: 0, timeout: 30_000 }),
+    transport: resilientTransport(rpcUrl()),
   }).extend(publicActions);
 }
 async function deployContract(

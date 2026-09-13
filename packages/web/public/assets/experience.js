@@ -2,6 +2,31 @@ const byId = (id) => document.getElementById(id);
 const query = (selector) => document.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+let revealObserver = null;
+
+function observeReveals() {
+  const revealNodes = [...document.querySelectorAll('.reveal')];
+  if (!window.__repaydReveals && 'IntersectionObserver' in window && !reduced) {
+    // Created once: after a client-side navigation this module never re-executes,
+    // so the observer has to outlive the first mount.
+    window.__repaydReveals = true;
+    revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.remove('is-pending');
+        revealObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.12 });
+  }
+  if (!revealObserver) {
+    // Reduced motion or no observer support: reveal immediately, as before.
+    revealNodes.forEach((node) => node.classList.remove('is-pending'));
+    return;
+  }
+  revealNodes.forEach((node) => node.classList.add('is-pending'));
+  revealNodes.forEach((node) => revealObserver.observe(node));
+}
+
 function startExperience() {
   const header = query('.site-header');
   const menu = query('[data-menu-toggle]');
@@ -15,19 +40,6 @@ function startExperience() {
   if (primaryNav && !primaryNav.querySelector('[href="/capital"]')) {
     primaryNav.insertAdjacentHTML('beforeend', '<a href="/capital">Capital</a><a href="/flow">Flow</a>');
   }
-
-  const revealNodes = [...document.querySelectorAll('.reveal')];
-  revealNodes.forEach((node) => node.classList.add('is-pending'));
-  if (!reduced && 'IntersectionObserver' in window) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.remove('is-pending');
-        observer.unobserve(entry.target);
-      });
-    }, { threshold: 0.12 });
-    revealNodes.forEach((node) => observer.observe(node));
-  } else revealNodes.forEach((node) => node.classList.remove('is-pending'));
 
   const tabs = [...document.querySelectorAll('[data-story-tab]')];
   const storyTitle = byId('story-title') || query('[data-story-title]');
@@ -118,3 +130,11 @@ if (document.readyState === 'loading') {
 } else {
   startExperience();
 }
+
+// The menu, tour, and tab bindings inside startExperience() only exist on the
+// landing page, which the Next app never re-mounts; only the reveal observer
+// must follow client-side navigation.
+document.addEventListener('repayd:remount', () => {
+  if (!window.__repaydReveals) return; // observer setup failed or reduced motion
+  observeReveals();
+});

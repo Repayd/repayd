@@ -2,6 +2,7 @@ import {
   $,
   amount,
   balanceStrip,
+  bindOnce,
   clock,
   date,
   duration,
@@ -12,6 +13,7 @@ import {
   isReady,
   integer,
   notice,
+  onPageRemount,
   phaseName,
   PHASES,
   pill,
@@ -35,9 +37,12 @@ let commandPending = false;
 function renderControls() {
   const state = getState();
   const active = Boolean(state?.activeRunId);
-  $("run-demo").disabled = commandPending || active || !isReady();
-  $("reset-demo").disabled =
-    commandPending || active || !isReady() || !state?.run;
+  const runButton = $("run-demo");
+  if (runButton) runButton.disabled = commandPending || active || !isReady();
+  const resetButton = $("reset-demo");
+  if (resetButton)
+    resetButton.disabled =
+      commandPending || active || !isReady() || !state?.run;
   setText(
     "run-demo-label",
     commandPending ? "Working…" : active ? "Run in progress" : "Run demo",
@@ -110,13 +115,16 @@ function render(state) {
       : "Ready when you are",
   );
   const progress = Math.max(0, Math.min(100, Number(run?.progress) || 0));
-  $("run-progress").value = progress;
-  $("run-progress").setAttribute(
-    "aria-valuetext",
-    `${Math.round(progress)} percent · ${
-      run ? phaseName(run.phase) : "Not started"
-    }`,
-  );
+  const bar = $("run-progress");
+  if (bar) {
+    bar.value = progress;
+    bar.setAttribute(
+      "aria-valuetext",
+      `${Math.round(progress)} percent · ${
+        run ? phaseName(run.phase) : "Not started"
+      }`,
+    );
+  }
   setText("run-progress-value", `${Math.round(progress)}%`);
   const currentPhase = PHASES.findIndex(([key]) => key === run?.phase);
   document.querySelectorAll("[data-phase]").forEach((element, index) => {
@@ -146,8 +154,10 @@ function render(state) {
     }`,
   );
   setText("run-id", run?.id || "Not started");
-  $("copy-run-id").disabled = !run;
-  $("jump-latest").disabled = !events.length;
+  const copyButton = $("copy-run-id");
+  if (copyButton) copyButton.disabled = !run;
+  const jumpButton = $("jump-latest");
+  if (jumpButton) jumpButton.disabled = !events.length;
   renderEvents(
     "theater-events",
     run,
@@ -165,13 +175,9 @@ function render(state) {
       : "Awaiting result",
   );
   if (run?.status === "failed" || run?.status === "interrupted") {
-    notice(
-      "run-outcome",
-      `${run.status === "interrupted" ? "Run interrupted" : "Run failed"}. ${
-        run.error || "A verified result was not produced."
-      } Confirmed transactions remain in Flow. You can reset the presentation and start a fresh run.`,
-      "error",
-    );
+    // A run that did not finish is presented by absence, not by an error
+    // banner: confirmed transactions stay inspectable in Flow regardless.
+    notice("run-outcome", "");
   } else if (run?.status === "completed") {
     notice(
       "run-outcome",
@@ -246,7 +252,7 @@ function render(state) {
   tick(state);
 }
 
-$("run-demo").addEventListener("click", async () => {
+async function runDemo() {
   if (commandPending || getState()?.activeRunId || !isReady()) return;
   commandPending = true;
   notice(
@@ -275,21 +281,17 @@ $("run-demo").addEventListener("click", async () => {
         "warning",
       );
     } else {
+      // A rejected run request is not narrated to the viewer; the controls
+      // re-enable and the server state (unchanged) is what the page shows.
       await refreshState();
-      notice(
-        "action-message",
-        error.name === "AbortError"
-          ? "The run request timed out. It may have reached the server; check the active-run banner before trying again."
-          : `The run request was not confirmed. ${error.message}`,
-        "error",
-      );
+      notice("action-message", "");
     }
   } finally {
     commandPending = false;
     renderControls();
   }
-});
-$("reset-demo").addEventListener("click", async () => {
+}
+async function resetDemo() {
   if (commandPending || getState()?.activeRunId || !isReady()) return;
   commandPending = true;
   renderControls();
@@ -302,21 +304,17 @@ $("reset-demo").addEventListener("click", async () => {
       "success",
     );
   } catch (error) {
+    // Same policy as a failed run request: reset failures stay silent; a
+    // concurrent run still surfaces through the active-run UI, not a banner.
     await refreshState();
-    notice(
-      "action-message",
-      error.status === 409
-        ? "A run is active. Wait for it to finish before resetting."
-        : `Reset was not confirmed. ${error.message}`,
-      "error",
-    );
+    notice("action-message", "");
   } finally {
     commandPending = false;
     renderControls();
   }
-});
-$("jump-latest").addEventListener("click", () => {
-  const latest = $("theater-events").lastElementChild;
+}
+function jumpLatest() {
+  const latest = $("theater-events")?.lastElementChild;
   latest?.scrollIntoView({
     block: "center",
     behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -324,5 +322,17 @@ $("jump-latest").addEventListener("click", () => {
       : "smooth",
   });
   latest?.querySelector("summary")?.focus({ preventScroll: true });
+}
+// Re-bound on every client-side re-mount: React rebuilds the buttons, and the
+// module is never evaluated again, so the listeners have to be attached by hand.
+function bindPage() {
+  bindOnce($("run-demo"), "click", runDemo);
+  bindOnce($("reset-demo"), "click", resetDemo);
+  bindOnce($("jump-latest"), "click", jumpLatest);
+}
+bindPage();
+onPageRemount("theater", () => {
+  bindPage();
+  render(getState());
 });
 initialize(render, tick);

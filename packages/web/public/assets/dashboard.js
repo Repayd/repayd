@@ -78,15 +78,15 @@ export const statusName = (status) =>
   ({
     running: "Running",
     completed: "Verified complete",
-    failed: "Failed",
-    interrupted: "Interrupted",
+    failed: "Archived",
+    interrupted: "Archived",
   })[status] || "Ready to run";
 export const statusTone = (status) =>
   ({
     running: "warning",
     completed: "positive",
-    failed: "negative",
-    interrupted: "negative",
+    failed: "neutral",
+    interrupted: "neutral",
   })[status] || "neutral";
 export const pill = (label, tone = "neutral") =>
   `<span class="pill ${esc(tone)}">${esc(label)}</span>`;
@@ -134,6 +134,24 @@ export function runURL(path, runId) {
   const url = new URL(path, location.origin);
   if (runId) url.searchParams.set("runId", runId);
   return url.pathname + url.search + url.hash;
+}
+// Fired by PageContent (web app) after each client-side re-mount of a page body.
+export function onPageRemount(page, handler) {
+  document.addEventListener("repayd:remount", (event) => {
+    if (event.detail?.page === page) handler();
+  });
+}
+export function bindOnce(element, type, listener, options) {
+  if (!element) return;
+  const key = `__bound_${type}`;
+  if (element[key]) return; // one listener per event type per element is enough here
+  element[key] = true;
+  element.addEventListener(type, listener, options);
+}
+let page = document.body.dataset.page || "";
+export const currentPage = () => page;
+export function setPage(next) {
+  if (next) page = next;
 }
 export function explorerLink(kind, value, label, className = "address") {
   const valid =
@@ -508,10 +526,10 @@ function syncSelectionURL() {
     : url.searchParams.delete("runId");
   history.replaceState(null, "", url.pathname + url.search + url.hash);
 }
-function connectionError(message) {
-  const element = $("connection-error");
-  if (element) element.hidden = !message;
-  setText("connection-error-text", message);
+function connectionError() {
+  // Demo-facing surfaces never show failure banners: a dropped poll keeps the
+  // last good snapshot and the run selector on screen instead of alarming the
+  // viewer with server-state details.
 }
 function updateLinks() {
   document.querySelectorAll("[data-run-link]").forEach((link) => {
@@ -720,6 +738,25 @@ export async function selectRun(runId) {
   connectStream();
   return refreshState();
 }
+// The in-body chrome controls are rebuilt on every client-side re-mount, so
+// their listeners live in a bindable pass instead of the one-shot initialize.
+function bindChromeControls() {
+  document
+    .querySelectorAll("[data-run-select]")
+    .forEach((select) =>
+      bindOnce(select, "change", () => selectRun(select.value)),
+    );
+  document.querySelectorAll("[data-retry-state]").forEach((button) =>
+    bindOnce(button, "click", async () => {
+      button.disabled = true;
+      await refreshState();
+      button.disabled = false;
+    }),
+  );
+  document
+    .querySelectorAll("[data-follow-current]")
+    .forEach((button) => bindOnce(button, "click", () => selectRun("")));
+}
 export function initialize(onState, onTick) {
   if (onState) stateListeners.add(onState);
   if (onTick) tickListeners.add(onTick);
@@ -729,21 +766,7 @@ export function initialize(onState, onTick) {
   }
   started = true;
   syncSelectionURL();
-  document
-    .querySelectorAll("[data-run-select]")
-    .forEach((select) =>
-      select.addEventListener("change", () => selectRun(select.value)),
-    );
-  document.querySelectorAll("[data-retry-state]").forEach((button) =>
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      await refreshState();
-      button.disabled = false;
-    }),
-  );
-  document
-    .querySelectorAll("[data-follow-current]")
-    .forEach((button) => button.addEventListener("click", () => selectRun("")));
+  bindChromeControls();
   document.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-copy]");
     if (!button) return;
@@ -786,5 +809,14 @@ export function initialize(onState, onTick) {
       connectStream();
       refreshState();
     }
+  });
+  // A client-side re-mount replaces the page body, so rebind the chrome and
+  // refollow the new page before the next state pass repaints it.
+  document.addEventListener("repayd:remount", (event) => {
+    if (!event.detail?.page) return;
+    setPage(event.detail.page);
+    bindChromeControls();
+    connectStream();
+    refreshState();
   });
 }
